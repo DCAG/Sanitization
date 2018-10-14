@@ -23,13 +23,17 @@ $totalLines = Get-Content $inputFile | Measure-Object -Line | % Lines
 
 #######################################################################
 
-# reusable static values values to replace
+# reusable static values to replace
+# $Convert hash table is written as output to the ConvertionTable.csv file
 $Convert = @{}    
 $Convert["myDom.dom"]       = "your.domain"
 $Convert["DC=myDom,DC=dom"] = "DC=your,DC=domain"
 $Convert["MYDOM"]           = "YOURDOMAIN"
 
 # Regex patterns to replace
+# Unique matches that are found based in patterns in this array are added to the $Convert hash table.
+# If a unique match was replaced with a new value before, it will get the same value to keep on consistency
+# You may use {0} in the values to add the line number to the value. Useful for assigning unique values.
 $rulesArr = @(
      @{ Pattern = "(?<=Windows service ).+(?= associated)";
             NewValue = "Service_{0}"}
@@ -39,7 +43,7 @@ $rulesArr = @(
             NewValue = "UserOrGroup_{0}"}
     ,@{ Pattern = "\bS(-\d{1,15}){6,7}\b";
             NewValue = "SID_{0}"}
-    ,@{ IPPattern = $true }                                                  
+    ,@{ CommonPattern = 'IPPattern' }                                                  
     ,@{ Pattern = "\b([\w-]+\.myDom\.dom)\b";
             NewValue = "Server_{0}.$($Convert["myDom.dom"])"}
     ,@{ Pattern = "\b(?<ServerName>[a-zA-Z0-9-]*\.myDom\.dom)\b";
@@ -58,7 +62,7 @@ $rulesArr = @(
             NewValue = "OU 'mila > kunis' "}
 )
 
-Measure-Command{
+Measure-Command {
     Get-Content $inputFile -PipelineVariable line | ForEach-Object -Begin {
         $lineNumber = 0
         $activityText = "Working on file $inputFile, New name $outputFile"
@@ -67,7 +71,7 @@ Measure-Command{
         $rulesArr | ForEach-Object -Begin { 
             $str = $line
          } -Process { 
-             $str = Replace-String -LineNumber $lineNumber -InputObject $str -ConvertionTable $Convert @_ 
+             $str = Replace-String -LineNumber $lineNumber -InputObject $str -Consistent -ConvertionTable $Convert @_ 
              } -End { 
                  $str 
                 }
