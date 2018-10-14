@@ -31,19 +31,31 @@ $Convert["MYDOM"]           = "YOURDOMAIN"
 
 # Regex patterns to replace
 $rulesArr = @(
-     @{ Pattern = "(?<=Windows service ).+(?= associated)"                                           ;NewValue = "Service_{0}"}
-    ,@{ Pattern = "(?<=group WinNT://(.*/)+).+(?= details on remote)|(?<=of group ).+(?= on remote)" ;NewValue = "UserOrGroup_{0}"}
-    ,@{ Pattern = "(?<=Account ).*(?= causes)|(?<=\d - ).*(?= have \d)|\b[a-z0-9]{5,7}-x\b|(?<=Retrieving user ).+(?= details on)|(?<=to account ).+(?=\.)|(?<=User Principal ').+(?=' details from)|(?<=account ).+(?= details)|(?<=member path WinNT://(.*/){1,}).+(?= of group)" ;NewValue = "UserOrGroup_{0}"}
-    ,@{ Pattern = "\bS(-\d{1,15}){6,7}\b"                                    ;NewValue = "SID_{0}"}
+     @{ Pattern = "(?<=Windows service ).+(?= associated)";
+            NewValue = "Service_{0}"}
+    ,@{ Pattern = "(?<=group WinNT://(.*/)+).+(?= details on remote)|(?<=of group ).+(?= on remote)";
+            NewValue = "UserOrGroup_{0}"}
+    ,@{ Pattern = "(?<=Account ).*(?= causes)|(?<=\d - ).*(?= have \d)|\b[a-z0-9]{5,7}-x\b|(?<=Retrieving user ).+(?= details on)|(?<=to account ).+(?=\.)|(?<=User Principal ').+(?=' details from)|(?<=account ).+(?= details)|(?<=member path WinNT://(.*/){1,}).+(?= of group)";
+            NewValue = "UserOrGroup_{0}"}
+    ,@{ Pattern = "\bS(-\d{1,15}){6,7}\b";
+            NewValue = "SID_{0}"}
     ,@{ IPPattern = $true }                                                  
-    ,@{ Pattern = "\b([\w-]+\.myDom\.dom)\b"                          ;NewValue = "Server_{0}.$($Convert["myDom.dom"])"}
-    ,@{ Pattern = "\b(?<ServerName>[a-zA-Z0-9-]*\.myDom\.dom)\b"      ;NewValue = "Server_{0}.$($Convert["myDom.dom"])"}
-    ,@{ Pattern = "\bmyDom\.dom\b"                                    ;NewValue = $Convert["myDom.dom"]}
-    ,@{ Pattern = "MYDOM"                                              ;NewValue = $Convert["MYDOM"]}
-    ,@{ Pattern = "CN=.* in LDAP path"                                       ;NewValue = "CN=CN_{0} in LDAP path"}
-    ,@{ Pattern = "OU=infra,DC=myDom,DC=dom"                      ;NewValue = "OU=soft,$($Convert["DC=myDom,DC=dom"])"}
-    ,@{ Pattern = "DC=myDom,DC=dom"                                 ;NewValue = $Convert["DC=myDom,DC=dom"]}
-    ,@{ Pattern = "OU 'myDom > infra' "                                     ;NewValue = "OU 'mila > kunis' "}
+    ,@{ Pattern = "\b([\w-]+\.myDom\.dom)\b";
+            NewValue = "Server_{0}.$($Convert["myDom.dom"])"}
+    ,@{ Pattern = "\b(?<ServerName>[a-zA-Z0-9-]*\.myDom\.dom)\b";
+            NewValue = "Server_{0}.$($Convert["myDom.dom"])"}
+    ,@{ Pattern = "\bmyDom\.dom\b";
+            NewValue = $Convert["myDom.dom"]}
+    ,@{ Pattern = "MYDOM";
+            NewValue = $Convert["MYDOM"]}
+    ,@{ Pattern = "CN=.* in LDAP path";
+            NewValue = "CN=CN_{0} in LDAP path"}
+    ,@{ Pattern = "OU=infra,DC=myDom,DC=dom";
+            NewValue = "OU=soft,$($Convert["DC=myDom,DC=dom"])"}
+    ,@{ Pattern = "DC=myDom,DC=dom";
+            NewValue = $Convert["DC=myDom,DC=dom"]}
+    ,@{ Pattern = "OU 'myDom > infra' ";
+            NewValue = "OU 'mila > kunis' "}
 )
 
 Measure-Command{
