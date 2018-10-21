@@ -8,34 +8,22 @@
    Amir Granot 9.7.2016
 #>
 
-function Script:Generate-IPValue {
-    [long]$t = $args[0]
+. .\Private\HelperFunctions.ps1
 
-    $o4 = ($t % 254) + 1
-    $t = $t / 254
-    $o3 = $t % 254
-    $t = $t / 254 
-    $o2 = $t % 254
-    $t = $t / 254
-    $o1 = $t % 254 + 11
-
-    "$o1.$o2.$o3.$o4"
-}
-
-class BlackenPattern {
-    [string]$Pattern
+class ReductionRule {
+    [ValidateNotNullOrEmpty()][string]$Pattern
     [scriptblock]$NewValueFunction
     [string]$NewValueString
     [ValidateSet('String','Function')][string]$Type
 
-    BlackenPattern ([string]$Pattern, [string]$NewValueString) {
+    ReductionRule ([string]$Pattern, [string]$NewValueString) {
         $this.Pattern          = $Pattern
         $this.NewValueString   = $NewValueString
         $this.NewValueFunction = $null
         $this.Type             = 'String'
     }
 
-    BlackenPattern ([string]$Pattern, [scriptblock]$NewValueFunction) {
+    ReductionRule ([string]$Pattern, [scriptblock]$NewValueFunction) {
         $this.Pattern          = $Pattern
         $this.NewValueFunction = $NewValueFunction
         $this.NewValueString   = $null
@@ -51,9 +39,34 @@ class BlackenPattern {
     }
 }
 
-Function New-Pattern {
-    [Alias('Pattern')] # Usually Single word is an automatic alias for Get-<SingleWord>
-    [OutputType([BlackenPattern])]
+Function New-ReductionRule {
+    <#
+    .SYNOPSIS
+    Short description
+    
+    .DESCRIPTION
+    Long description
+    
+    .PARAMETER Pattern
+    Parameter description
+    
+    .PARAMETER NewValueFunction
+    Parameter description
+    
+    .PARAMETER NewValueString
+    Parameter description
+    
+    .PARAMETER CommonPattern
+    Parameter description
+    
+    .EXAMPLE
+    An example
+    
+    .NOTES
+    General notes
+    #>
+    [Alias('New-SanitizationRule','New-MarkingRule','Mark')] # Usually Single word is an automatic alias for Get-<SingleWord>
+    [OutputType([ReductionRule])]
     [CmdletBinding(DefaultParameterSetName = 'CustomFunction')]
     param(
         # Regex pattern with 1 named capturing group at most
@@ -66,7 +79,7 @@ Function New-Pattern {
         [Parameter(Mandatory = $true, Position = 1, ParameterSetName = 'CustomString')]
         [String]$NewValueString,
         [Parameter(Mandatory = $true, Position = 0, ParameterSetName = 'Common')]
-        [ValidateSet('IPPattern')]   
+        [ValidateSet('IPV4Address')]   
         [string]$CommonPattern
     )
 
@@ -74,18 +87,53 @@ Function New-Pattern {
         $Script:CommonPatternTable[$CommonPattern]
     }
     elseif($PSCmdlet.ParameterSetName -eq 'CustomFunction') {
-        New-Object BlackenPattern($Pattern, $NewValueFunction)
+        New-Object ReductionRule($Pattern, $NewValueFunction)
     }
     elseif($PSCmdlet.ParameterSetName -eq 'CustomString') {
-        New-Object BlackenPattern($Pattern, $NewValueString)
+        New-Object ReductionRule($Pattern, $NewValueString)
     }
 }
 
 $Script:CommonPatternTable = @{
-    'IPPattern' = New-Pattern -Pattern '\b(\d{1,3}(\.\d{1,3}){3})\b' -NewValueFunction ${Function:Generate-IPValue}
+    'IPV4Address' = New-ReductionRule -Pattern '\b(\d{1,3}(\.\d{1,3}){3})\b' -NewValueFunction ${Function:Generate-IPValue}
+    #'IPV6Address' = New-Pattern -Pattern '\b(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))\b' -NewValueFunction ${Function:Generate-IPValue}
+    #'MACAddress' = New-Pattern -Pattern '\b([0-9A-F]{2}[:-]){5}([0-9A-F]{2})\b' -NewValueFunction ${Function:Generate-IPValue}
+    #'GUID' = New-Pattern -Pattern '\b[{(]?[0-9A-F]{8}[-]?(?:[0-9A-F]{4}[-]?){3}[0-9A-F]{12}[)}]?\b' -NewValueFunction ${Function:Generate-IPValue}
 }
 
-function Replace-String {
+function Invoke-Reduction {
+    <#
+    .SYNOPSIS
+    Short description
+    
+    .DESCRIPTION
+    Long description
+    
+    .PARAMETER InputObject
+    Parameter description
+    
+    .PARAMETER ReductionRule
+    Parameter description
+    
+    .PARAMETER LineNumber
+    Parameter description
+    
+    .PARAMETER Consistent
+    Parameter description
+    
+    .PARAMETER ConvertionTable
+    Parameter description
+    
+    .PARAMETER AsObject
+    Parameter description
+    
+    .EXAMPLE
+    An example
+    
+    .NOTES
+    General notes
+    #>
+    [Alias('Invoke-Sanitization','irduc','isntz')]
     [CmdletBinding()]
     param(
         # One line string
@@ -99,7 +147,7 @@ function Replace-String {
         $InputObject,
         [Parameter(Mandatory = $true, 
             Position = 1)]
-        [BlackenPattern[]]$Pattern,
+        [ReductionRule[]]$ReductionRule,
         # Good practice is to provide the value from outside and increment before this function is being called for a new line.
         # If $LineNumber is not provided it is set to 0.
         [Parameter(ValueFromPipeline = $true,
@@ -115,7 +163,7 @@ function Replace-String {
             ParameterSetName = 'Consistent')]
         [HashTable]
         $ConvertionTable,
-        # Output as object (with line number and instead of a single line
+        # Output as object
         # Will work only if the data was changed
         # Format parameter
         [switch]
@@ -138,9 +186,9 @@ function Replace-String {
         $CurrentString = $InputObject.ToString()
         $CurrentStringChanged = $false
 
-        foreach ($PatternItem in $Pattern) {
+        foreach ($Rule in $ReductionRule) {
             # Consistent
-            $Matches = Select-String -InputObject $CurrentString -Pattern $PatternItem.Pattern -AllMatches | Select-Object -ExpandProperty Matches | Sort-Object -Property Index -Descending # Sort Descending is required so the replacments won't overwrite each other
+            $Matches = Select-String -InputObject $CurrentString -Pattern $Rule.Pattern -AllMatches | Select-Object -ExpandProperty Matches | Sort-Object -Property Index -Descending # Sort Descending is required so the replacments won't overwrite each other
             if ($Matches) {
                 $CurrentStringChanged = $true
                 $StrSB = New-Object System.Text.StringBuilder($CurrentString)
@@ -153,7 +201,7 @@ function Replace-String {
                         if ($null -eq $ConvertionTable[$MatchedValue]) {
                             # MatchedValue doesn't exist in the ConvertionTable
                             # Adding MatchedValue to the ConvertionTable, add it with line number (if {0} is specified in $NewValue)
-                            $ConvertionTable[$MatchedValue] = $PatternItem.Evaluate($Uniqueness)
+                            $ConvertionTable[$MatchedValue] = $Rule.Evaluate($Uniqueness)
                             'Adding new value to the convertion table: $ConvetionTable[{0}] = {1}' -f $MatchedValue, $ConvertionTable[$MatchedValue] | Write-Verbose 
                             $Uniqueness++
                         }
@@ -162,7 +210,7 @@ function Replace-String {
                         $Replacement = $ConvertionTable[$MatchedValue]
                     }
                     else {
-                        $Replacement = $PatternItem.Evaluate($LineNumber)
+                        $Replacement = $Rule.Evaluate($LineNumber)
                     }
 
                     $null = $StrSB.Remove($Match.Index, $Match.Length)
@@ -171,7 +219,7 @@ function Replace-String {
 
                 $CurrentString = $StrSB.ToString()
             }
-        } # foreach($PatternItem in $Pattern)
+        } # foreach($Rule in $ReductionRule)
 
         # Only if result is different from the input object
         if ($AsObject) {
@@ -198,7 +246,3 @@ function Replace-String {
         $LineNumber++
     } # Process
 }
-
-
-#gcm replace-string -Syntax
-#gcm New-Pattern -Syntax
