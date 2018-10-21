@@ -24,59 +24,65 @@ function Script:Generate-IPValue {
 
 class BlackenPattern {
     [string]$Pattern
-    [scriptblock]$NewValue
+    [scriptblock]$NewValueFunction
+    [string]$NewValueString
+    [ValidateSet('String','Function')][string]$Type
 
-    BlackenPattern ($Pattern, $NewValue) {
-        $this.Pattern = $Pattern
-        $this.NewValue = $NewValue
+    BlackenPattern ([string]$Pattern, [string]$NewValueString) {
+        $this.Pattern          = $Pattern
+        $this.NewValueString   = $NewValueString
+        $this.NewValueFunction = $null
+        $this.Type             = 'String'
+    }
+
+    BlackenPattern ([string]$Pattern, [scriptblock]$NewValueFunction) {
+        $this.Pattern          = $Pattern
+        $this.NewValueFunction = $NewValueFunction
+        $this.NewValueString   = $null
+        $this.Type             = 'Function'
+    }
+
+    [string] Evaluate([int]$Seed){
+        if($this.Type -eq 'String'){
+            return ($this.NewValueString -f $Seed)
+        }else{ # $this.Type -eq 'Function'
+            return (& $this.NewValueFunction $Seed)
+        }
     }
 }
 
 Function New-Pattern {
-    [Alias('Pattern')]
+    [Alias('Pattern')] # Usually Single word is an automatic alias for Get-<SingleWord>
     [OutputType([BlackenPattern])]
-    [CmdletBinding(DefaultParameterSetName = 'Custom')]
+    [CmdletBinding(DefaultParameterSetName = 'CustomFunction')]
     param(
         # Regex pattern with 1 named capturing group at most
-        [Parameter(Mandatory = $true,
-            Position = 0,
-            ParameterSetName = 'Custom')]
+        [Parameter(Mandatory = $true, Position = 0, ParameterSetName = 'CustomString')]
+        [Parameter(Mandatory = $true, Position = 0, ParameterSetName = 'CustomFunction')]
         [string]$Pattern,
         # Value can contain {0} so counter value will be added
-        [Parameter(Mandatory = $true,
-            Position = 1,
-            ParameterSetName = 'Custom')]
-        [scriptblock]$NewValue,
-        [Parameter(Mandatory = $true,
-            Position = 0,
-            ParameterSetName = 'Common')]
+        [Parameter(Mandatory = $true, Position = 1, ParameterSetName = 'CustomFunction')]
+        [scriptblock]$NewValueFunction,
+        [Parameter(Mandatory = $true, Position = 1, ParameterSetName = 'CustomString')]
+        [String]$NewValueString,
+        [Parameter(Mandatory = $true, Position = 0, ParameterSetName = 'Common')]
         [ValidateSet('IPPattern')]   
         [string]$CommonPattern
     )
 
-    if($PSCmdlet.ParameterSetName -eq 'Common'){
+    if ($PSCmdlet.ParameterSetName -eq 'Common') {
         $Script:CommonPatternTable[$CommonPattern]
     }
-    else{
-        New-Object BlackenPattern($Pattern, $NewValue)
+    elseif($PSCmdlet.ParameterSetName -eq 'CustomFunction') {
+        New-Object BlackenPattern($Pattern, $NewValueFunction)
+    }
+    elseif($PSCmdlet.ParameterSetName -eq 'CustomString') {
+        New-Object BlackenPattern($Pattern, $NewValueString)
     }
 }
 
 $Script:CommonPatternTable = @{
-    'IPPattern' = New-Pattern -Pattern '\b(\d{1,3}(\.\d{1,3}){3})\b' -NewValue ${Function:Generate-IPValue}
-}
-
-function ReplaceAt {
-    param(
-        [string]$Str,
-        [int]$Index,
-        [int]$Length,
-        [string]$NewValue
-    )
-    $StrSB = New-Object System.Text.StringBuilder($Str)
-    $null = $StrSB.Remove($Index, $Length)
-    $null = $StrSB.Insert($Index, $Replacement)
-    $StrSB.ToString()
+    'IPPattern' = New-Pattern -Pattern '\b(\d{1,3}(\.\d{1,3}){3})\b' -NewValueFunction ${Function:Generate-IPValue}
 }
 
 function Replace-String {
@@ -120,7 +126,7 @@ function Replace-String {
             $LineNumber = 0
         }
 
-        if($Consistent) {
+        if ($Consistent) {
             $Uniqueness = 0
             if (-not $ConvertionTable) {
                 $ConvertionTable = @{}
@@ -129,25 +135,25 @@ function Replace-String {
     }
 
     Process {
-
         $CurrentString = $InputObject.ToString()
-
         $CurrentStringChanged = $false
 
-        foreach($PatternItem in $Pattern){
+        foreach ($PatternItem in $Pattern) {
             # Consistent
-            $Matches = Select-String -InputObject $CurrentString -Pattern $PatternItem.Pattern -AllMatches | Select-Object -ExpandProperty Matches
-            if($Matches){
-                Foreach($Match in $Matches){
+            $Matches = Select-String -InputObject $CurrentString -Pattern $PatternItem.Pattern -AllMatches | Select-Object -ExpandProperty Matches | Sort-Object -Property Index -Descending # Sort Descending is required so the replacments won't overwrite each other
+            if ($Matches) {
+                $CurrentStringChanged = $true
+                $StrSB = New-Object System.Text.StringBuilder($CurrentString)
+                Foreach ($Match in $Matches) {
                     $MatchedValue = $Match.Value
 
                     'MatchedValue = {0}' -f $MatchedValue | Write-Verbose
 
-                    if($Consistent){
+                    if ($Consistent) {
                         if ($null -eq $ConvertionTable[$MatchedValue]) {
                             # MatchedValue doesn't exist in the ConvertionTable
                             # Adding MatchedValue to the ConvertionTable, add it with line number (if {0} is specified in $NewValue)
-                            $ConvertionTable[$MatchedValue] = & $PatternItem.NewValue $Uniqueness
+                            $ConvertionTable[$MatchedValue] = $PatternItem.Evaluate($Uniqueness)
                             'Adding new value to the convertion table: $ConvetionTable[{0}] = {1}' -f $MatchedValue, $ConvertionTable[$MatchedValue] | Write-Verbose 
                             $Uniqueness++
                         }
@@ -155,13 +161,15 @@ function Replace-String {
                         # This MatchedValue exists, use it.
                         $Replacement = $ConvertionTable[$MatchedValue]
                     }
-                    else{
-                        $Replacement = & $PatternItem.NewValue $LineNumber
+                    else {
+                        $Replacement = $PatternItem.Evaluate($LineNumber)
                     }
 
-                    $CurrentString = ReplaceAt -Str $CurrentString -Index $Match.Index -Length $Match.Length -NewValue $Replacement
-                    $CurrentStringChanged = $true
+                    $null = $StrSB.Remove($Match.Index, $Match.Length)
+                    $null = $StrSB.Insert($Match.Index, $Replacement)
                 }
+
+                $CurrentString = $StrSB.ToString()
             }
         } # foreach($PatternItem in $Pattern)
 
@@ -170,16 +178,13 @@ function Replace-String {
             $OutputProperties = @{
                 LineNumber    = $LineNumber
                 CurrentString = $CurrentString
-                #Pattern       = $Pattern
-                #NewValue      = $NewValue
                 Original      = $InputObject
-                #Result        = $result
                 Changed       = $CurrentStringChanged
             }
 
             $OutputPropertiesList = 'LineNumber', 'CurrentString', 'Original', 'Changed'
 
-            if($Consistent){
+            if ($Consistent) {
                 $OutputProperties['Uniqueness'] = $Uniqueness
                 $OutputPropertiesList += 'Uniqueness'
             }
@@ -196,3 +201,4 @@ function Replace-String {
 
 
 #gcm replace-string -Syntax
+#gcm New-Pattern -Syntax
