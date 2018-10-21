@@ -66,6 +66,19 @@ $Script:CommonPatternTable = @{
     'IPPattern' = New-Pattern -Pattern '\b(\d{1,3}(\.\d{1,3}){3})\b' -NewValue ${Function:Generate-IPValue}
 }
 
+function ReplaceAt {
+    param(
+        [string]$Str,
+        [int]$Index,
+        [int]$Length,
+        [string]$NewValue
+    )
+    $StrSB = New-Object System.Text.StringBuilder($Str)
+    $null = $StrSB.Remove($Index, $Length)
+    $null = $StrSB.Insert($Index, $Replacement)
+    $StrSB.ToString()
+}
+
 function Replace-String {
     [CmdletBinding()]
     param(
@@ -134,19 +147,19 @@ function Replace-String {
                         if ($null -eq $ConvertionTable[$MatchedValue]) {
                             # MatchedValue doesn't exist in the ConvertionTable
                             # Adding MatchedValue to the ConvertionTable, add it with line number (if {0} is specified in $NewValue)
-                            $ConvertionTable[$MatchedValue] = $PatternItem.NewValue.Invoke($Uniqueness)
+                            $ConvertionTable[$MatchedValue] = & $PatternItem.NewValue $Uniqueness
                             'Adding new value to the convertion table: $ConvetionTable[{0}] = {1}' -f $MatchedValue, $ConvertionTable[$MatchedValue] | Write-Verbose 
                             $Uniqueness++
                         }
 
                         # This MatchedValue exists, use it.
-                        $CurrentString = $CurrentString -replace [regex]::Escape($MatchedValue), $ConvertionTable[$MatchedValue]
+                        $Replacement = $ConvertionTable[$MatchedValue]
                     }
                     else{
-                        $CurrentString = $CurrentString -replace $MatchedValue, $PatternItem.NewValue.Invoke($LineNumber)
+                        $Replacement = & $PatternItem.NewValue $LineNumber
                     }
 
-                    # Since I know the pattern was matched, I'm certain that the line was changed
+                    $CurrentString = ReplaceAt -Str $CurrentString -Index $Match.Index -Length $Match.Length -NewValue $Replacement
                     $CurrentStringChanged = $true
                 }
             }
@@ -154,15 +167,24 @@ function Replace-String {
 
         # Only if result is different from the input object
         if ($AsObject) {
-            New-Object -TypeName PSCustomObject -Property @{
+            $OutputProperties = @{
                 LineNumber    = $LineNumber
                 CurrentString = $CurrentString
                 #Pattern       = $Pattern
-                NewValue      = $NewValue
+                #NewValue      = $NewValue
                 Original      = $InputObject
-                Result        = $result
+                #Result        = $result
                 Changed       = $CurrentStringChanged
-            } | Select-Object CurrentString, Pattern, NewValue, LineNumber, Original, Result, Changed
+            }
+
+            $OutputPropertiesList = 'LineNumber', 'CurrentString', 'Original', 'Changed'
+
+            if($Consistent){
+                $OutputProperties['Uniqueness'] = $Uniqueness
+                $OutputPropertiesList += 'Uniqueness'
+            }
+
+            New-Object -TypeName PSCustomObject -Property $OutputProperties | Select-Object $OutputPropertiesList
         }
         else {
             $CurrentString

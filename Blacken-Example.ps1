@@ -51,13 +51,24 @@ $rulesArr = @(
         Pattern '(?<=\().*(?=\))' {'Process_{0}' -f $args[0]}
 )
 
-Get-Process | Replace-String -AsObject -Pattern $rulesArr | ft -AutoSize
+Get-Process | Replace-String -ConvertionTable $t -Consistent -Pattern $rulesArr -AsObject -Verbose  | ft -AutoSize
+Get-Process | Sort-Object | Replace-String -Pattern $rulesArr -AsObject -Verbose  | ft -AutoSize
+
+
+ipconfig /all | Replace-String -ConvertionTable $t -Consistent -Pattern $rulesArr -AsObject -Verbose  | fl # ft -AutoSize
+ipconfig | Sort-Object | Replace-String -Pattern $rulesArr -AsObject -Verbose  | fl
 #-Consistent -ConvertionTable $Convert
 # Write convertion table
 $Convert.Keys | Select-Object -Property @{N = 'Original'; E = {$_}}, @{N = 'NewValue'; E = {$Convert[$_]}} | Sort-Object -Property NewValue | Export-Csv $tableFile -Force -NoTypeInformation
     
-
-'System.Diagnostics.Process (System)' | Select-String '(?<=\().*(?=\))' | % Matches
+$P = Pattern '(?<=\().*(?=\))' {'Process_{0}' -f $args[0]}
+(& $P.NewValue 5)
+Get-Process | %{
+        $CurrentStringSB = New-Object System.Text.StringBuilder($_.ToString())
+        $CurrentStringSB.ToString()
+}
+'System.Diagnostics.Process (System)' | Select-String '(?<=\().*(?=\))' | % Matches 
+'System.Diagnostics.Process (System)'
 $t = @{}
 '1.1.1.1 30.20.7.2 3.1.2.4 1.2.4.6 4.5.6.4 9.8.7.8' | Replace-String -Consistent -ConvertionTable $t -Pattern @(Pattern -CommonPattern IPPattern)
 '1.1.1.1 30.20.7.2' | Replace-String -Pattern @(Pattern -CommonPattern IPPattern)
