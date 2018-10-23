@@ -2,7 +2,7 @@
 Author: Amir Granot
 Date: 5 September 2016
 #>
-
+<#
 #requires -version 5.1
 
 #$Convert.Keys | Select-Object -Property @{N='Original';E={$_}},@{N='NewValue';E={$Convert[$_]}} | Sort-Object -Property NewValue | Export-Csv $tableFile -Force -NoTypeInformation
@@ -88,11 +88,27 @@ $t = @{}
 
 
 
-$File = 'C:\Users\Amir\Desktop\WindowsUpdate.log'
 
 $RulesArr = @(
         Mark '(?<=\d{4}\/\d{2}\/\d{2} \d{2}\:\d{2}\:\d{2}\.\d{7} \d{1,5} \d{1,5} )\w+(?=\s+)' 'Component_{0}'
-)
+        )
+        
+        $table = @{}
+        Get-Content $File | Invoke-Reduction -ReductionRule $RulesArr -Consistent -ConvertionTable $table -AsObject
+#>
 
-$table = @{}
-Get-Content $File | Invoke-Reduction -ReductionRule $RulesArr -Consistent -ConvertionTable $table -AsObject
+rmo Sanitization
+ipmo .\Sanitization.psd1
+. .\Source\Classes\RedactionRule.ps1
+
+$File = "$env:userprofile\Desktop\WindowsUpdate.log"
+$File2 = "$env:userprofile\Desktop\WindowsUpdate - Copy.log"
+<#
+Invoke-FileRedaction -Path $File -RedactionRule @(
+        Mark '(?<=\d{4}\/\d{2}\/\d{2} \d{2}\:\d{2}\:\d{2}\.\d{7} \d{1,5} \d{1,5}\s+)\w+(?=\s+)' 'Component_{0}'
+) #-Verbose
+#>
+
+$File,$File2 | Invoke-FileRedaction -RedactionRule @(
+        Mark '(?<=\d{4}\/\d{2}\/\d{2} \d{2}\:\d{2}\:\d{2}\.\d{7} \d{1,5} \d{1,5}\s+)\w+(?=\s+)' 'Component_{0}'
+)

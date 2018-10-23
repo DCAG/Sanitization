@@ -1,107 +1,11 @@
-﻿<#
-.Synopsis
-   Replace string with regex patterns
-.DESCRIPTION
-   Replace string with regex patterns
-   Good for blackening purposes usually.
-.AUTOR
-   Amir Granot 9.7.2016
-#>
-
-. .\Private\HelperFunctions.ps1
-
-class ReductionRule {
-    [ValidateNotNullOrEmpty()][string]$Pattern
-    [scriptblock]$NewValueFunction
-    [string]$NewValueString
-    [ValidateSet('String','Function')][string]$Type
-
-    ReductionRule ([string]$Pattern, [string]$NewValueString) {
-        $this.Pattern          = $Pattern
-        $this.NewValueString   = $NewValueString
-        $this.NewValueFunction = $null
-        $this.Type             = 'String'
-    }
-
-    ReductionRule ([string]$Pattern, [scriptblock]$NewValueFunction) {
-        $this.Pattern          = $Pattern
-        $this.NewValueFunction = $NewValueFunction
-        $this.NewValueString   = $null
-        $this.Type             = 'Function'
-    }
-
-    [string] Evaluate([int]$Seed){
-        if($this.Type -eq 'String'){
-            return ($this.NewValueString -f $Seed)
-        }else{ # $this.Type -eq 'Function'
-            return (& $this.NewValueFunction $Seed)
-        }
-    }
-}
-
-Function New-ReductionRule {
-    <#
-    .SYNOPSIS
-    Short description
-    
-    .DESCRIPTION
-    Long description
-    
-    .PARAMETER Pattern
-    Parameter description
-    
-    .PARAMETER NewValueFunction
-    Parameter description
-    
-    .PARAMETER NewValueString
-    Parameter description
-    
-    .PARAMETER CommonPattern
-    Parameter description
-    
-    .EXAMPLE
-    An example
-    
-    .NOTES
-    General notes
-    #>
-    [Alias('New-SanitizationRule','New-MarkingRule','Mark')] # Usually Single word is an automatic alias for Get-<SingleWord>
-    [OutputType([ReductionRule])]
-    [CmdletBinding(DefaultParameterSetName = 'CustomFunction')]
-    param(
-        # Regex pattern with 1 named capturing group at most
-        [Parameter(Mandatory = $true, Position = 0, ParameterSetName = 'CustomString')]
-        [Parameter(Mandatory = $true, Position = 0, ParameterSetName = 'CustomFunction')]
-        [string]$Pattern,
-        # Value can contain {0} so counter value will be added
-        [Parameter(Mandatory = $true, Position = 1, ParameterSetName = 'CustomFunction')]
-        [scriptblock]$NewValueFunction,
-        [Parameter(Mandatory = $true, Position = 1, ParameterSetName = 'CustomString')]
-        [String]$NewValueString,
-        [Parameter(Mandatory = $true, Position = 0, ParameterSetName = 'Common')]
-        [ValidateSet('IPV4Address')]   
-        [string]$CommonPattern
-    )
-
-    if ($PSCmdlet.ParameterSetName -eq 'Common') {
-        $Script:CommonPatternTable[$CommonPattern]
-    }
-    elseif($PSCmdlet.ParameterSetName -eq 'CustomFunction') {
-        New-Object ReductionRule($Pattern, $NewValueFunction)
-    }
-    elseif($PSCmdlet.ParameterSetName -eq 'CustomString') {
-        New-Object ReductionRule($Pattern, $NewValueString)
-    }
-}
-
 $Script:CommonPatternTable = @{
-    'IPV4Address' = New-ReductionRule -Pattern '\b(\d{1,3}(\.\d{1,3}){3})\b' -NewValueFunction ${Function:Generate-IPValue}
+    'IPV4Address' = New-RedactionRule -Pattern '\b(\d{1,3}(\.\d{1,3}){3})\b' -NewValueFunction ${Function:Generate-IPValue}
     #'IPV6Address' = New-Pattern -Pattern '\b(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))\b' -NewValueFunction ${Function:Generate-IPValue}
     #'MACAddress' = New-Pattern -Pattern '\b([0-9A-F]{2}[:-]){5}([0-9A-F]{2})\b' -NewValueFunction ${Function:Generate-IPValue}
     #'GUID' = New-Pattern -Pattern '\b[{(]?[0-9A-F]{8}[-]?(?:[0-9A-F]{4}[-]?){3}[0-9A-F]{12}[)}]?\b' -NewValueFunction ${Function:Generate-IPValue}
 }
 
-function Invoke-Reduction {
+function Invoke-Redaction {
     <#
     .SYNOPSIS
     Short description
@@ -147,7 +51,7 @@ function Invoke-Reduction {
         $InputObject,
         [Parameter(Mandatory = $true, 
             Position = 1)]
-        [ReductionRule[]]$ReductionRule,
+        [RedactionRule[]]$RedactionRule,
         # Good practice is to provide the value from outside and increment before this function is being called for a new line.
         # If $LineNumber is not provided it is set to 0.
         [Parameter(ValueFromPipeline = $true,
@@ -186,7 +90,7 @@ function Invoke-Reduction {
         $CurrentString = $InputObject.ToString()
         $CurrentStringChanged = $false
 
-        foreach ($Rule in $ReductionRule) {
+        foreach ($Rule in $RedactionRule) {
             # Consistent
             $Matches = Select-String -InputObject $CurrentString -Pattern $Rule.Pattern -AllMatches | Select-Object -ExpandProperty Matches | Sort-Object -Property Index -Descending # Sort Descending is required so the replacments won't overwrite each other
             if ($Matches) {
