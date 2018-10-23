@@ -1,4 +1,4 @@
-function Generate-IPValue {
+function Convert-IPValue {
     [long]$t = $args[0]
 
     $o4 = ($t % 254) + 1
