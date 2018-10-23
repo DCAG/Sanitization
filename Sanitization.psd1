@@ -15,7 +15,7 @@ RootModule = 'Sanitization.psm1'
 ModuleVersion = '0.0.1'
 
 # Supported PSEditions
-# CompatiblePSEditions = @()
+CompatiblePSEditions = @('Core','Desktop')
 
 # ID used to uniquely identify this module
 GUID = '26716e58-1081-403e-ab49-14abfcbe03d7'
@@ -33,7 +33,7 @@ Copyright = '(c) Amir Granot. All rights reserved.'
 # Description = ''
 
 # Minimum version of the PowerShell engine required by this module
-# PowerShellVersion = ''
+PowerShellVersion = '5.1'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''
@@ -95,7 +95,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = 'redact', 'redaction', 'sanitization', 'censor', 'blacking out classified', 'classified'
+        Tags = 'redact', 'redaction', 'sanitization', 'censor', 'blacking out', 'classified'
 
         # A URL to the license for this module.
         # LicenseUri = ''
