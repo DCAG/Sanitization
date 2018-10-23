@@ -1,5 +1,8 @@
 Describe 'Invoke-Redaction' {
     Context 'Parameters Validation' {
+        It 'Should be skipped' -Skip {
+
+        }
     }
 
     Context 'Edge Cases' {
