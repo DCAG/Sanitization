@@ -15,9 +15,9 @@ function Invoke-FileRedaction {
         # Path to original log file
 
         # Output will be on the same directory
-        $SanitizedFilePath = $Path -replace '\.(txt|log)$', "-Sanitized.txt"
+        $SanitizedFilePath = $Path + "-Sanitized.txt"
         'Sanitized File: {0}' -f $SanitizedFilePath | Write-Verbose 
-        $ConvertionTableFilePath = $Path -replace '\.(txt|log)$', "-ConvertionTable.csv"
+        $ConvertionTableFilePath = $Path + "-ConvertionTable.csv"
         'Convertion Table File: {0}' -f $ConvertionTableFilePath | Write-Verbose 
 
         #######################################################################
