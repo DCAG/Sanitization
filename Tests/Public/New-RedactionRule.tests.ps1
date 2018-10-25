@@ -1,3 +1,5 @@
+using module Sanitization
+
 Describe 'New-RedactionRule' {
     Context 'Parameters Validation' {
         It 'Pattern that doesn''t exist in validation set of CommonPattern parameter should throw' {
@@ -30,9 +32,12 @@ Describe 'New-RedactionRule' {
             }
         }
         It 'Should output RedactionRule type object' {
-            New-RedactionRule -Pattern 'p' -NewValueFunction {'f'} | Should -BeOfType [RedactionRule]
-            New-RedactionRule -Pattern 'p' -NewValueString 's'  | Should -BeOfType [RedactionRule]
-            Mark -CommonPattern IPV4Address | Should -BeOfType [RedactionRule]
+            $FunctionRule = New-RedactionRule -Pattern 'p' -NewValueFunction {'f'}
+            $StringRule = New-RedactionRule -Pattern 'p' -NewValueString 's'
+            $CommonPatternRule = Mark -CommonPattern IPV4Address
+            $FunctionRule.GetType() | Should -Be 'RedactionRule'
+            $StringRule.GetType() | Should -Be 'RedactionRule'
+            $CommonPatternRule.GetType() | Should -Be 'RedactionRule'
         }
     }
 }

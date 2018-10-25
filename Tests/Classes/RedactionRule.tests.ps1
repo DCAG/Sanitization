@@ -1,3 +1,5 @@
+using module Sanitization
+
 Describe 'Class RedactionRule' {
     Context 'Parameters Validation' {
         It 'Reduction rule intialized with a string NewValue should create redaction rule of type "String"' {    

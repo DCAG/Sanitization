@@ -7,16 +7,16 @@ function Invoke-FileRedaction {
         [string]$Path,
         [RedactionRule[]]$RedactionRule
     )
-    
+
     begin {
     }
-    
+
     process {
         # Path to original log file
 
         # Output will be on the same directory
         $SanitizedFilePath = $Path + "-Sanitized.txt"
-        'Sanitized File: {0}' -f $SanitizedFilePath | Write-Verbose 
+        'Sanitized File: {0}' -f $SanitizedFilePath | Write-Verbose
         $ConvertionTableFilePath = $Path + "-ConvertionTable.csv"
         'Convertion Table File: {0}' -f $ConvertionTableFilePath | Write-Verbose 
 
@@ -28,22 +28,22 @@ function Invoke-FileRedaction {
             $TotalLines = 1
         }
 
-        $ConvertionTable = @{}
-        Get-Content $Path | ForEach-Object -Begin {
-            $Line = 0
 
-            #region Write-Progress calculation block initialization
-            $PercentComplete = 0
-            $PercentStep = 100 / $TotalLines
-            [double]$AverageTime = 0
-            [int]$SecondsRemaining = $AverageTime * $TotalLines
-            $StopWatch = [System.Diagnostics.Stopwatch]::new()
-            $StopWatch.Start()
-            #endregion
-        } -Process {
-            
+        #region Write-Progress calculation block initialization
+        $PercentComplete = 0
+        $PercentStep = 100 / $TotalLines
+        [double]$AverageTime = 0
+        [int]$SecondsRemaining = $AverageTime * $TotalLines
+        $StopWatch = [System.Diagnostics.Stopwatch]::new()
+        $StopWatch.Start()
+        #endregion
+
+        $Line = 0
+        $ConvertionTable = @{}
+        Get-Content $Path | ForEach-Object {
+
             Invoke-Redaction -InputObject $_ -Line $Line -RedactionRule $RedactionRule -Consistent -ConvertionTable $ConvertionTable
-            
+
             #region Write-Progress calculation block
             $PercentComplete += $PercentStep
             $ElapsedSeconds = $StopWatch.Elapsed.TotalSeconds
@@ -53,7 +53,7 @@ function Invoke-FileRedaction {
             'L = {0} | Avg = {1} | Remain(S) = {2}' -f $Line, $AverageTime, $ElapsedSeconds, $SecondsRemaining | Write-Debug
             Write-Progress -Activity "Redacting sensitive data from file: `"$Path`"" -Id 1 -PercentComplete $PercentComplete -SecondsRemaining $SecondsRemaining
             #endregion
-            
+
             $Line++
         } | Out-File -FilePath $SanitizedFilePath
         
