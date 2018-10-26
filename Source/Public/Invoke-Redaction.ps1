@@ -61,7 +61,11 @@ function Invoke-Redaction {
         [HashTable]
         $ConvertionTable,
         [switch]
-        $AsObject)
+        $AsObject,
+        [switch]
+        $ShowProgress,
+        [int]
+        $TotalLines)
 
     Begin {
         if (-not $LineNumber) {
@@ -74,6 +78,17 @@ function Invoke-Redaction {
                 $ConvertionTable = @{}
             }
         }
+
+        #region Write-Progress calculation block initialization
+        if($ShowProgress) {
+            $PercentComplete = 0
+            $PercentStep = 100 / $TotalLines
+            [double]$AverageTime = 0
+            [int]$SecondsRemaining = $AverageTime * $TotalLines
+            $StopWatch = [System.Diagnostics.Stopwatch]::new()
+            $StopWatch.Start()
+        }
+        #endregion
     }
 
     Process {
@@ -137,6 +152,27 @@ function Invoke-Redaction {
             $CurrentString
         }
 
+        #region Write-Progress calculation block
+        if($ShowProgress) {
+            $PercentComplete += $PercentStep
+            $ElapsedSeconds = $StopWatch.Elapsed.TotalSeconds
+            $StopWatch.Restart()
+            [double]$AverageTime = ($AverageTime * $Line + $ElapsedSeconds) / ($Line + 1)
+            [int]$SecondsRemaining = $AverageTime * ($TotalLines - $Line)
+            'L = {0} | Avg = {1} | Remain(S) = {2}' -f $Line, $AverageTime, $ElapsedSeconds, $SecondsRemaining | Write-Debug
+            Write-Progress -Activity "Redacting sensitive data" -Id 1 -ParentId 2 -PercentComplete $PercentComplete -SecondsRemaining $SecondsRemaining
+        }
+        #endregion
+
         $LineNumber++
     } # Process
+
+    end {
+        #region Write-Progress calculation block closing
+        if($ShowProgress) {
+            $StopWatch.Stop()        
+            Write-Progress -Activity "[Done] Redacting sensitive data [Done]" -Id 1 -ParentId 2 -Completed
+        }
+        #endregion
+    }
 }
