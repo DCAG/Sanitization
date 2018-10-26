@@ -50,6 +50,7 @@ function Invoke-Redaction {
         [Parameter(ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true, 
             Position = 2)]
+        [ValidateRange(0,[int]::MaxValue)]
         [int]$LineNumber,
         # Requires $ConvertionTable but if it won't be provided, empty hash table for $ConvertionTable will be initialized instead
         [Parameter(Position = 3,
@@ -64,8 +65,10 @@ function Invoke-Redaction {
         $AsObject,
         [switch]
         $ShowProgress,
+        [ValidateRange(1,[int]::MaxValue)]        
         [int]
-        $TotalLines)
+        $TotalLines
+    )
 
     Begin {
         if (-not $LineNumber) {
@@ -96,7 +99,6 @@ function Invoke-Redaction {
         $CurrentStringChanged = $false
 
         foreach ($Rule in $RedactionRule) {
-            # Consistent
             $Matches = Select-String -InputObject $CurrentString -Pattern $Rule.Pattern -AllMatches | Select-Object -ExpandProperty Matches | Sort-Object -Property Index -Descending # Sort Descending is required so the replacments won't overwrite each other
             if ($Matches) {
                 $CurrentStringChanged = $true
@@ -130,7 +132,6 @@ function Invoke-Redaction {
             }
         } # foreach($Rule in $ReductionRule)
 
-        # Only if result is different from the input object
         if ($AsObject) {
             $OutputProperties = @{
                 LineNumber    = $LineNumber
@@ -157,10 +158,10 @@ function Invoke-Redaction {
             $PercentComplete += $PercentStep
             $ElapsedSeconds = $StopWatch.Elapsed.TotalSeconds
             $StopWatch.Restart()
-            [double]$AverageTime = ($AverageTime * $Line + $ElapsedSeconds) / ($Line + 1)
-            [int]$SecondsRemaining = $AverageTime * ($TotalLines - $Line)
-            'L = {0} | Avg = {1} | Remain(S) = {2}' -f $Line, $AverageTime, $ElapsedSeconds, $SecondsRemaining | Write-Debug
-            Write-Progress -Activity "Redacting sensitive data" -Id 1 -ParentId 2 -PercentComplete $PercentComplete -SecondsRemaining $SecondsRemaining
+            [double]$AverageTime = ($AverageTime * $LineNumber + $ElapsedSeconds) / ($LineNumber + 1)
+            [int]$SecondsRemaining = $AverageTime * ($TotalLines - $LineNumber)
+            'L = {0} | Avg = {1} | Remain(S) = {2}' -f $LineNumber, $AverageTime, $ElapsedSeconds, $SecondsRemaining | Write-Debug
+            Write-Progress -Activity "Redacting sensitive data" -Id 2 -ParentId 1 -PercentComplete $PercentComplete -SecondsRemaining $SecondsRemaining
         }
         #endregion
 
@@ -171,7 +172,7 @@ function Invoke-Redaction {
         #region Write-Progress calculation block closing
         if($ShowProgress) {
             $StopWatch.Stop()        
-            Write-Progress -Activity "[Done] Redacting sensitive data [Done]" -Id 1 -ParentId 2 -Completed
+            Write-Progress -Activity "[Done] Redacting sensitive data [Done]" -Id 2 -ParentId 1 -Completed
         }
         #endregion
     }

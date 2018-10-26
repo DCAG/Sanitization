@@ -14,10 +14,10 @@ Function New-RedactionRule {
     This script block can accept at most 1 int parameter with $args[0] or declare variable in param() block 
     
     .PARAMETER NewValueString
-    Parameter description
+    String value to be replaced instead of pattern. The string can contain place holder {0}, and it will be replaced with uniqueness factor.
     
     .PARAMETER CommonPattern
-    Parameter description
+    Predefined rules - patterns and values
     
     .EXAMPLE
     Mark '(?<=\().*(?=\))' 'Process_{0}'

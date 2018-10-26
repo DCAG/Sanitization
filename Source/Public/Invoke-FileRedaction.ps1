@@ -31,6 +31,11 @@ function Invoke-FileRedaction {
         Get-Content $Path | Invoke-Redaction -RedactionRule $RedactionRule -Consistent -ConvertionTable $ConvertionTable -ShowProgress -TotalLines $TotalLines | Out-File -FilePath $SanitizedFilePath
         $ConvertionTable.Keys | Select-Object -Property @{N = 'Original'; E = {$_}}, @{N = 'NewValue'; E = {$ConvertionTable[$_]}} | Sort-Object -Property NewValue | Export-Csv -Path $ConvertionTableFilePath
 
+        [PSCustomObject]@{
+            Original = $Path
+            Sanitized = $SanitizedFilePath
+            ConvertionTable = $ConvertionTableFilePath            
+        }
     }
     
     end {
