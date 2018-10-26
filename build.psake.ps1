@@ -1,6 +1,7 @@
 Properties {
     $ModuleName = 'Sanitization'
     $WorkingDir = $PSScriptRoot
+    $WorkingDir = Resolve-Path .
 }
 
 Task default -depends updatedocumentation
@@ -24,20 +25,22 @@ Task test -depends build {
 }
 
 Task build -depends psscriptanalyzer, clean {
-    $SourceFolder = "$WorkingDir\Source\"
+    $SourceFolder = "$WorkingDir\Source"
     $ManifestFile = "$SourceFolder\$ModuleName.psd1"
     
-    $ModuleManifest = Test-ModuleManifest -Path $ManifestFile
+    $obj = "$WorkingDir\obj"
+    mkdir $obj -Force
+    Copy-Item -Path $ManifestFile -Destination "$obj\"
+    Get-ChildItem $SourceFolder\*\* | Get-Content | Out-File "$obj\$ModuleName.psm1"
+    'Export-ModuleMember -Function * -Alias * -Cmdlet *' | Out-File "$obj\$ModuleName.psm1" -Append
+    
+    $ModuleManifest = Test-ModuleManifest -Path "$obj\$ModuleName.psd1"
     $ModuleVersion  = $ModuleManifest.Version
     $OutputFolder   = "$WorkingDir\bin\$ModuleName\$ModuleVersion"
     mkdir $OutputFolder -Force
     
+    Copy-Item -Path "$obj\$ModuleName.psm1" -Destination "$OutputFolder\" -Recurse
     Copy-Item -Path $ManifestFile -Destination "$OutputFolder\" -Recurse
-    Get-ChildItem $SourceFolder\*\* | Get-Content | Out-File "$OutputFolder\$ModuleName.psm1"
-
-    $ExportedAliases = $ModuleManifest.ExportedAliases.Keys -join ''','''
-    $ExportedFunctions = $ModuleManifest.ExportedFunctions.Keys -join ''','''
-    'Export-ModuleMember -Function ''{0}'' -Alias ''{1}''' -f $ExportedFunctions, $ExportedAliases | Out-File "$OutputFolder\$ModuleName.psm1" -Append
 }
 
 Task psscriptanalyzer {
