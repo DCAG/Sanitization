@@ -1,5 +1,5 @@
 function Convert-IPValue {
-    [long]$t = $args[0]
+    [int]$t = $args[0]
 
     $o4 = ($t % 254) + 1
     $t = $t / 254

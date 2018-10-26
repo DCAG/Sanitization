@@ -1,28 +1,28 @@
 function Invoke-Redaction {
     <#
     .SYNOPSIS
-    Short description
+    Redact a string object
     
     .DESCRIPTION
-    Long description
+    Redact a string object
     
     .PARAMETER InputObject
-    Parameter description
+    An Input Object to redact from
     
     .PARAMETER ReductionRule
-    Parameter description
+    Array of Rules with Regex pattern and new value to set when this pattern is matched to input object 
     
     .PARAMETER LineNumber
-    Parameter description
+    Line number is used as a seed to obfoscate new values
     
     .PARAMETER Consistent
-    Parameter description
+    Use a ConvertionTable to make previously matched values assigned with the same new valuethat was assigned to them and theyr were first found to make consistent
     
     .PARAMETER ConvertionTable
-    Parameter description
+    Table contains the matched values and their replacements
     
     .PARAMETER AsObject
-    Parameter description
+    Return object with more parameters instead of single string 
     
     .EXAMPLE
     An example
@@ -60,9 +60,6 @@ function Invoke-Redaction {
             ParameterSetName = 'Consistent')]
         [HashTable]
         $ConvertionTable,
-        # Output as object
-        # Will work only if the data was changed
-        # Format parameter
         [switch]
         $AsObject)
 
