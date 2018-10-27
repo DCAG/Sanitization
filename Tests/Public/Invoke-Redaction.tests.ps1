@@ -3,6 +3,10 @@ Describe 'Invoke-Redaction' {
         It 'LineNumber should not accept negative number' {
             {Invoke-Redaction -LineNumber -1} | Should -Throw -ExpectedMessage "Cannot validate argument on parameter 'LineNumber'. The -1 argument is less than the minimum allowed range of 0. Supply an argument that is greater than or equal to 0 and then try the command again."
         }
+        It 'InputObject and LineNumber should accept values from pipeline by name' {
+            $Line = [PSCustomObject]@{InputObject = 'a';LineNumber = 0}
+            $Line | Invoke-Redaction -RedactionRule (Mark 'a' 'b') | Should -Be 'b'
+        }
     }
 
     Context 'Edge Cases' {
