@@ -59,8 +59,8 @@ function Invoke-Redaction {
         $Consistent,
         [Parameter(Position = 4,
             ParameterSetName = 'Consistent')]
-        [HashTable]
-        $ConvertionTable,
+        [string]
+        $OutConvertionTable,
         [Parameter(Position = 5)]
         [switch]
         $AsObject,
@@ -77,9 +77,7 @@ function Invoke-Redaction {
 
         if ($Consistent) {
             $Uniqueness = 0
-            if (-not $ConvertionTable) {
-                $ConvertionTable = @{}
-            }
+            $ConvertionTable = @{}
         }
 
         #region Write-Progress calculation block initialization
@@ -174,5 +172,14 @@ function Invoke-Redaction {
             Write-Progress -Activity "[Done] Redacting sensitive data [Done]" -Id 2 -ParentId 1 -Completed
         }
         #endregion
+
+        if(-not [string]::IsNullOrWhiteSpace($OutConvertionTable)){
+            '$PSCmdlet.MyInvocation.CommandOrigin: {0}' -f $PSCmdlet.MyInvocation.CommandOrigin | Write-Debug
+            if($PSCmdlet.MyInvocation.CommandOrigin -eq 'Runspace'){
+                $PSCmdlet.SessionState.PSVariable.Set($OutConvertionTable, $ConvertionTable)
+            }else{ # CommandOrigin: Internal
+                Set-Variable -Name $OutConvertionTable -Value $ConvertionTable -Scope 1
+            }
+        }
     }
 }

@@ -27,8 +27,7 @@ function Invoke-FileRedaction {
         
         Write-Progress -Activity "Redacting sensitive data from file: `"$Path`"" -Id 1
         
-        $ConvertionTable = @{}
-        Get-Content $Path | Invoke-Redaction -RedactionRule $RedactionRule -Consistent -ConvertionTable $ConvertionTable -TotalLines $TotalLines | Out-File -FilePath $SanitizedFilePath
+        Get-Content $Path | Invoke-Redaction -RedactionRule $RedactionRule -Consistent -OutConvertionTable 'ConvertionTable' -TotalLines $TotalLines | Out-File -FilePath $SanitizedFilePath
         $ConvertionTable.Keys | Select-Object -Property @{N = 'Original'; E = {$_}}, @{N = 'NewValue'; E = {$ConvertionTable[$_]}} | Sort-Object -Property NewValue | Export-Csv -Path $ConvertionTableFilePath
 
         [PSCustomObject]@{

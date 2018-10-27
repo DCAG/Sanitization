@@ -5,7 +5,20 @@ Describe 'Invoke-Redaction' {
         }
         It 'InputObject and LineNumber should accept values from pipeline by name' {
             $Line = [PSCustomObject]@{InputObject = 'a';LineNumber = 0}
-            $Line | Invoke-Redaction -RedactionRule (Mark 'a' 'b') | Should -Be 'b'
+            $Line | Invoke-Redaction -RedactionRule (New-RedactionRule 'a' 'b') | Should -Be 'b'
+        }
+    }
+
+    Context 'Functionality' {
+        $IPV4AddressRule = New-RedactionRule '\d+' '{0}'
+        $InputStringIPAddress = '10 10 6'
+        It 'Consistent should replace the exact string with the same value' {
+            $SanitizedOutput = $InputStringIPAddress | Invoke-Redaction -RedactionRule $IPV4AddressRule -Consistent:$true
+            $SanitizedOutput | Should -Be '1 1 0'
+        }
+        It 'Inconsistent should replace the exact string with new value every time (on the same line)' {
+            $SanitizedOutput = $InputStringIPAddress | Invoke-Redaction -RedactionRule $IPV4AddressRule -Consistent:$false
+            $SanitizedOutput | Should -Be '0 0 0'
         }
     }
 
