@@ -7,6 +7,10 @@ Describe 'Invoke-Redaction' {
             $Line = [PSCustomObject]@{InputObject = 'a';LineNumber = 0}
             $Line | Invoke-Redaction -RedactionRule (New-RedactionRule 'a' 'b') | Should -Be 'b'
         }
+        It 'Dynamic parameter $OutConvertionTable should be shown only when $Consistent parameter is assigned true'{
+            {'a' | Invoke-Redaction -Consistent -OutConvertionTable 't' -RedactionRule (New-RedactionRule 'a' 'b')} | Should -Not -Throw
+            {'a' | Invoke-Redaction -OutConvertionTable 't' -RedactionRule (New-RedactionRule 'a' 'b')} | Should -Throw -ExpectedMessage "A parameter cannot be found that matches parameter name 'OutConvertionTable'."
+        }
     }
 
     Context 'Functionality' {
@@ -19,6 +23,11 @@ Describe 'Invoke-Redaction' {
         It 'Inconsistent should replace the exact string with new value every time (on the same line)' {
             $SanitizedOutput = $InputStringIPAddress | Invoke-Redaction -RedactionRule $IPV4AddressRule -Consistent:$false
             $SanitizedOutput | Should -Be '0 0 0'
+        }
+        It 'When consistent and $OutConvertionTable is assigned, it should be populated with hashtable of the convertion'{
+            'a' | Invoke-Redaction -Consistent -OutConvertionTable 't' -RedactionRule (New-RedactionRule 'a' 'b')
+            $t.Keys | Should -Be 'a'
+            $t['a'] | Should -Be 'b'
         }
     }
 

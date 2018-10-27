@@ -18,8 +18,9 @@ function Invoke-Redaction {
     .PARAMETER Consistent
     Use a ConvertionTable to make previously matched values assigned with the same new valuethat was assigned to them and theyr were first found to make consistent
     
-    .PARAMETER ConvertionTable
-    Table contains the matched values and their replacements
+    .PARAMETER OutConvertionTable
+    Table contains the matched values and their replacements.
+    Shown only when Consistent switch is on ($true)
     
     .PARAMETER AsObject
     Return object with more parameters instead of single string 
@@ -57,10 +58,6 @@ function Invoke-Redaction {
             ParameterSetName = 'Consistent')]
         [switch]
         $Consistent,
-        [Parameter(Position = 4,
-            ParameterSetName = 'Consistent')]
-        [string]
-        $OutConvertionTable,
         [Parameter(Position = 5)]
         [switch]
         $AsObject,
@@ -70,14 +67,35 @@ function Invoke-Redaction {
         $TotalLines = 1
     )
 
+    DynamicParam {
+        if($Consistent){
+            $ParameterName = 'OutConvertionTable'
+            $RuntimeParameterDictionary = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
+            $AttributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+            
+            $ValidateNotNullOrEmptyAttribute = New-Object System.Management.Automation.ValidateNotNullOrEmptyAttribute
+            $AttributeCollection.Add($ValidateNotNullOrEmptyAttribute)
+            
+            $ParameterAttribute = New-Object System.Management.Automation.ParameterAttribute
+            $ParameterAttribute.Position = 4
+            $AttributeCollection.Add($ParameterAttribute)
+            
+            $RuntimeParameter = New-Object System.Management.Automation.RuntimeDefinedParameter($ParameterName,[string],$AttributeCollection)
+            $RuntimeParameterDictionary.Add($ParameterName,$RuntimeParameter)
+            
+            return $RuntimeParameterDictionary
+        }
+    }
+
     Begin {
         if (-not $LineNumber) {
             $LineNumber = 0
         }
 
         if ($Consistent) {
-            $Uniqueness = 0
+            $OutConvertionTable = $PSBoundParameters[$ParameterName]            
             $ConvertionTable = @{}
+            $Uniqueness = 0
         }
 
         #region Write-Progress calculation block initialization
