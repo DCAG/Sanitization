@@ -30,7 +30,7 @@ function Invoke-Redaction {
     .NOTES
     General notes
     #>
-    [Alias('Invoke-Sanitization','irduc','isntz')]
+    [Alias('Invoke-Sanitization','irdac','isntz')]
     [CmdletBinding()]
     param(
         # One line string
@@ -61,13 +61,13 @@ function Invoke-Redaction {
             ParameterSetName = 'Consistent')]
         [HashTable]
         $ConvertionTable,
+        [Parameter(Position = 5)]
         [switch]
         $AsObject,
-        [switch]
-        $ShowProgress,
-        [ValidateRange(1,[int]::MaxValue)]        
+        [Parameter(Position = 6)]
+        [ValidateRange(1,[int]::MaxValue)]
         [int]
-        $TotalLines
+        $TotalLines = 1
     )
 
     Begin {
@@ -83,14 +83,12 @@ function Invoke-Redaction {
         }
 
         #region Write-Progress calculation block initialization
-        if($ShowProgress) {
-            $PercentComplete = 0
-            $PercentStep = 100 / $TotalLines
-            [double]$AverageTime = 0
-            [int]$SecondsRemaining = $AverageTime * $TotalLines
-            $StopWatch = [System.Diagnostics.Stopwatch]::new()
-            $StopWatch.Start()
-        }
+        $PercentComplete = 0
+        $PercentStep = 100 / $TotalLines
+        [double]$AverageTime = 0
+        [int]$SecondsRemaining = $AverageTime * $TotalLines
+        $StopWatch = [System.Diagnostics.Stopwatch]::new()
+        $StopWatch.Start()
         #endregion
     }
 
@@ -154,15 +152,16 @@ function Invoke-Redaction {
         }
 
         #region Write-Progress calculation block
-        if($ShowProgress) {
+        if($TotalLines -gt $LineNumber){
             $PercentComplete += $PercentStep
             $ElapsedSeconds = $StopWatch.Elapsed.TotalSeconds
             $StopWatch.Restart()
             [double]$AverageTime = ($AverageTime * $LineNumber + $ElapsedSeconds) / ($LineNumber + 1)
             [int]$SecondsRemaining = $AverageTime * ($TotalLines - $LineNumber)
             'L = {0} | Avg = {1} | Remain(S) = {2}' -f $LineNumber, $AverageTime, $ElapsedSeconds, $SecondsRemaining | Write-Debug
-            Write-Progress -Activity "Redacting sensitive data" -Id 2 -ParentId 1 -PercentComplete $PercentComplete -SecondsRemaining $SecondsRemaining
         }
+
+        Write-Progress -Activity "Redacting sensitive data. Line Number: $LineNumber out of $TotalLines" -Id 2 -ParentId 1 -PercentComplete $PercentComplete -SecondsRemaining $SecondsRemaining
         #endregion
 
         $LineNumber++

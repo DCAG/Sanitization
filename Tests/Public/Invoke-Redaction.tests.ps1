@@ -1,7 +1,7 @@
 Describe 'Invoke-Redaction' {
     Context 'Parameters Validation' {
-        It 'Should be skipped' -Skip {
-
+        It 'LineNumber should not accept negative number' {
+            {Invoke-Redaction -LineNumber -1} | Should -Throw -ExpectedMessage "Cannot validate argument on parameter 'LineNumber'. The -1 argument is less than the minimum allowed range of 0. Supply an argument that is greater than or equal to 0 and then try the command again."
         }
     }
 
