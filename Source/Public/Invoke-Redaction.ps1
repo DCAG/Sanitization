@@ -31,44 +31,34 @@ function Invoke-Redaction {
     .NOTES
     General notes
     #>
-    [Alias('Invoke-Sanitization','irdac','isntz')]
+    [Alias('Invoke-Sanitization', 'irdac', 'isntz')]
     [CmdletBinding()]
     param(
         # One line string
-        [Parameter(Mandatory = $true, 
+        [Parameter(Mandatory = $true,  
             ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true, 
             Position = 0)]
-        [Alias("CurrentString")]
         [AllowEmptyString()] # Incoming lines can be empty, so applied because of the Mandatory flag
         [psobject]
         $InputObject,
         [Parameter(Mandatory = $true, 
             Position = 1)]
         [RedactionRule[]]$RedactionRule,
-        # Good practice is to provide the value from outside and increment before this function is being called for a new line.
-        # If $LineNumber is not provided it is set to 0.
-        [Parameter(ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true, 
-            Position = 2)]
-        [ValidateRange(0,[int]::MaxValue)]
-        [int]$LineNumber,
         # Requires $ConvertionTable but if it won't be provided, empty hash table for $ConvertionTable will be initialized instead
-        [Parameter(Position = 3,
-            ParameterSetName = 'Consistent')]
+        [Parameter(Position = 2)]
         [switch]
         $Consistent,
-        [Parameter(Position = 5)]
+        [Parameter(Position = 4)]
         [switch]
         $AsObject,
-        [Parameter(Position = 6)]
-        [ValidateRange(1,[int]::MaxValue)]
+        [Parameter(Position = 5)]
+        [ValidateRange(1, [int]::MaxValue)]
         [int]
         $TotalLines = 1
     )
 
     DynamicParam {
-        if($Consistent){
+        if ($Consistent) {
             $ParameterName = 'OutConvertionTable'
             $RuntimeParameterDictionary = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
             $AttributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
@@ -77,21 +67,17 @@ function Invoke-Redaction {
             $AttributeCollection.Add($ValidateNotNullOrEmptyAttribute)
             
             $ParameterAttribute = New-Object System.Management.Automation.ParameterAttribute
-            $ParameterAttribute.Position = 4
+            $ParameterAttribute.Position = 3
             $AttributeCollection.Add($ParameterAttribute)
             
-            $RuntimeParameter = New-Object System.Management.Automation.RuntimeDefinedParameter($ParameterName,[string],$AttributeCollection)
-            $RuntimeParameterDictionary.Add($ParameterName,$RuntimeParameter)
+            $RuntimeParameter = New-Object System.Management.Automation.RuntimeDefinedParameter($ParameterName, [string], $AttributeCollection)
+            $RuntimeParameterDictionary.Add($ParameterName, $RuntimeParameter)
             
             return $RuntimeParameterDictionary
         }
     }
 
     Begin {
-        if (-not $LineNumber) {
-            $LineNumber = 0
-        }
-
         if ($Consistent) {
             $OutConvertionTable = $PSBoundParameters[$ParameterName]            
             $ConvertionTable = @{}
@@ -106,6 +92,8 @@ function Invoke-Redaction {
         $StopWatch = [System.Diagnostics.Stopwatch]::new()
         $StopWatch.Start()
         #endregion
+
+        $LineNumber = 0
     }
 
     Process {
@@ -168,7 +156,7 @@ function Invoke-Redaction {
         }
 
         #region Write-Progress calculation block
-        if($TotalLines -gt $LineNumber){
+        if ($TotalLines -gt $LineNumber) {
             $PercentComplete += $PercentStep
             $ElapsedSeconds = $StopWatch.Elapsed.TotalSeconds
             $StopWatch.Restart()
@@ -185,17 +173,19 @@ function Invoke-Redaction {
 
     end {
         #region Write-Progress calculation block closing
-        if($ShowProgress) {
+        if ($ShowProgress) {
             $StopWatch.Stop()        
             Write-Progress -Activity "[Done] Redacting sensitive data [Done]" -Id 2 -ParentId 1 -Completed
         }
         #endregion
 
-        if(-not [string]::IsNullOrWhiteSpace($OutConvertionTable)){
+        if (-not [string]::IsNullOrWhiteSpace($OutConvertionTable)) {
             '$PSCmdlet.MyInvocation.CommandOrigin: {0}' -f $PSCmdlet.MyInvocation.CommandOrigin | Write-Debug
-            if($PSCmdlet.MyInvocation.CommandOrigin -eq 'Runspace'){
+            if ($PSCmdlet.MyInvocation.CommandOrigin -eq 'Runspace') {
                 $PSCmdlet.SessionState.PSVariable.Set($OutConvertionTable, $ConvertionTable)
-            }else{ # CommandOrigin: Internal
+            }
+            else {
+                # CommandOrigin: Internal
                 Set-Variable -Name $OutConvertionTable -Value $ConvertionTable -Scope 1
             }
         }
