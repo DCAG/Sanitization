@@ -1,10 +1,31 @@
 function Invoke-FileRedaction {
+    <#
+    .SYNOPSIS
+    Short description
+    
+    .DESCRIPTION
+    Long description
+    
+    .PARAMETER Path
+    Parameter description
+    
+    .PARAMETER RedactionRule
+    Parameter description
+    
+    .EXAMPLE
+    An example
+    
+    .NOTES
+    General notes
+    #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true,
-            ValueFromPipeline=$true)]
-        [ValidateScript({Test-Path $_})]
+        [Parameter(Mandatory = $true,
+            ValueFromPipeline = $true)]
+        [ValidateScript( {Test-Path $_})]
         [string]$Path,
+        [Parameter(Mandatory = $true, 
+            Position = 1)]
         [RedactionRule[]]$RedactionRule
     )
 
@@ -21,18 +42,18 @@ function Invoke-FileRedaction {
         
         $TotalLines = Get-Content $Path | Measure-Object -Line | Select-Object -ExpandProperty Lines
         'Total No.Lines: {0}' -f $TotalLines | Write-Verbose
-        if($TotalLines -eq 0){
+        if ($TotalLines -eq 0) {
             $TotalLines = 1
         }
         
         Write-Progress -Activity "Redacting sensitive data from file: `"$Path`"" -Id 1
         
         Get-Content $Path | Invoke-Redaction -RedactionRule $RedactionRule -Consistent -OutConvertionTable 'ConvertionTable' -TotalLines $TotalLines | Out-File -FilePath $SanitizedFilePath
-        $ConvertionTable.Keys | Select-Object -Property @{N = 'Original'; E = {$_}}, @{N = 'NewValue'; E = {$ConvertionTable[$_]}} | Sort-Object -Property NewValue | Export-Csv -Path $ConvertionTableFilePath
+        $ConvertionTable.Keys | Select-Object -Property @{N = 'NewValue'; E = {$ConvertionTable[$_]}}, @{N = 'Original'; E = {$_}} | Sort-Object -Property NewValue | Export-Csv -Path $ConvertionTableFilePath
 
         [PSCustomObject]@{
-            Original = $Path
-            Sanitized = $SanitizedFilePath
+            Original        = $Path
+            Sanitized       = $SanitizedFilePath
             ConvertionTable = $ConvertionTableFilePath            
         }
     }
