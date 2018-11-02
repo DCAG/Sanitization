@@ -1,6 +1,5 @@
 .vscode
 bin
-obj
 docs
 Examples.ps1
 temp.psake.ps1

@@ -1,62 +1,154 @@
+#region Functions
+Function InstallRequiredModules {
+    $RequiredModules = 'Pester', 'platyPS', 'PSScriptAnalyzer'
+    $InstalledModule = Get-InstalledModule -Name $RequiredModules -ErrorAction 'SilentlyContinue'
+    $ModuleToInstall = Compare-Object -ReferenceObject $RequiredModules -DifferenceObject $InstalledModule.Name | Select-Object -ExpandProperty Name
+    if($ModuleToInstall.Count -gt 0){
+        Install-Module -Name $ModuleToInstall -Repository 'PSGallery' -Scope 'CurrentUser' -AllowClobber -Confirm:$false -ErrorAction 'Stop'
+    }
+
+    Import-Module -Name $RequiredModules -Force -ErrorAction 'Stop'
+}
+
+Function RunPSScriptAnalyzer {
+    param($Path)
+
+    $Analysis = Invoke-ScriptAnalyzer -Path $Path -Recurse -Severity Warning
+    $Errors = $Analysis | Where-Object {$_.Severity -eq 'Error'}
+    $Warnings = $Analysis | Where-Object {$_.Severity -eq 'Warning'}
+
+    if ($null -eq $Errors -and $null -eq $Warnings) {
+        'PSScriptAnalyzer passed without errors or warnings'
+    }
+    else{
+        $Analysis
+    
+        if ($Errors) {
+            Write-Error 'One or more Script Analyzer errors were found. Build cannot continue!'
+        }
+        
+        if ($Warnings) {
+            Write-Error 'One or more Script Analyzer warnings were found. These should be corrected.'
+        }
+    }
+}
+
+Function DisplaySystemInformation {
+    'PowerShell Version:'
+    $PSVersionTable
+    ''
+    'System Information:'
+    [environment]::OSVersion | Format-List
+}
+
+Function UploadTestResultsToAppVeyor {
+    param($TestResults)
+
+    if (-not $env:APPVEYOR_JOB_ID) {
+        return
+    }
+
+    Invoke-WebRequest "https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID" -InFile $TestResults
+}
+#endregion
+
+####################
+#   Psake build
+####################
+
 Properties {
     $ModuleName = 'Sanitization'
     $WorkingDir = $PSScriptRoot
-    $WorkingDir = Resolve-Path .
+
+    $TestsFolder = Join-Path -Path $WorkingDir -ChildPath 'Tests'
+    $DocsFolder = Join-Path -Path $WorkingDir -ChildPath 'docs'
+    $RefFolder = Join-Path -Path $DocsFolder -ChildPath 'reference'
+    $MdHelpPath = Join-Path -Path $RefFolder -ChildPath 'functions'
+    $BinFolder = Join-Path -Path $WorkingDir -ChildPath 'bin'
+    $TestResultsXml = Join-Path -Path $BinFolder -ChildPath 'TestsResults.xml'
+    $SourceFolder = Join-Path -Path $WorkingDir -ChildPath 'Source'
+    $ManifestFile = Join-Path -Path $SourceFolder -ChildPath "$ModuleName.psd1"
+    $ModuleManifest = Import-PowerShellDataFile $ManifestFile
+    $ModuleVersion = $ModuleManifest.Version
+    $BinModuleFolder = Join-Path -Path $BinFolder -ChildPath $ModuleName
+    $ModuleVersionFolder = Join-Path -Path $BinModuleFolder -ChildPath $ModuleVersion
+    $ExternalHelpFolder = Join-Path -Path $ModuleVersionFolder -ChildPath 'en-US'
 }
 
-Task default -depends updatedocumentation
-#Task default -depends build
+Task default -depends 'Test'
 
-Task publish {
+FormatTaskName -format @"
+-----------
+{0}
+-----------
+"@
 
+# To run manually
+Task 'UpdateMarkdownHelp' -Depends 'Test' {
+    Update-MarkdownHelpModule -Path $MdHelpPath
 }
 
-Task updatedocumentation -depends test {
-    New-MarkdownHelp -Module $ModuleName -OutputFolder "$WorkingDir\docs"
+# To run manually
+Task 'CreateMarkdownHelp' -depends 'Test' {
+    New-MarkdownHelp -Module $ModuleName -OutputFolder $MdHelpPath
 }
 
-Task test -depends build {
-    $ModulePaths = "$WorkingDir\bin;$env:PSModulePath" -split ';' | Select-Object -Unique
+Task 'Publish' -Depends 'CreateExternalHelp' {
+    'Publishing version [{0}] to PSGallery...' -f $ModuleVersion
+    Publish-Module -Name $ModuleName -NuGetApiKey $env:PSGALLERY_API_KEY -Repository 'PSGallery'
+}
+
+Task 'CreateExternalHelp' -Depends 'Test' -Description 'Create module help from markdown files' {
+    if(-not (Test-Path $MdHelpPath)){
+        Write-Error 'There is no markdown help folder to create external help files from' -RecommendedAction 'Run task "CreateMarkdownHelp"'
+        return
+    }
+
+    New-ExternalHelp -Path $MdHelpPath -OutputPath $ExternalHelpFolder -Force
+}
+
+# Default
+Task 'Test' -Depends 'Build' {
+    $ModulePaths = "$BinFolder;$env:PSModulePath" -split ';' | Select-Object -Unique
     $env:PSModulePath = $ModulePaths -join ';'
-    
-    Import-Module Sanitization
+    Import-Module -Name $ModuleName
 
-    Invoke-Pester "$WorkingDir\Tests"
-}
+    $TestResults = Invoke-Pester -Path $TestsFolder -PassThru -OutputFile $TestResultsXml -OutputFormat NUnitXml 
 
-Task build -depends psscriptanalyzer, clean {
-    $SourceFolder = "$WorkingDir\Source"
-    $ManifestFile = "$SourceFolder\$ModuleName.psd1"
-    
-    $obj = "$WorkingDir\obj"
-    mkdir $obj -Force
-    Copy-Item -Path $ManifestFile -Destination "$obj\"
-    Get-ChildItem $SourceFolder\*\* | Get-Content | Out-File "$obj\$ModuleName.psm1"
-    'Export-ModuleMember -Function * -Alias * -Cmdlet *' | Out-File "$obj\$ModuleName.psm1" -Append
-    
-    $ModuleManifest = Test-ModuleManifest -Path "$obj\$ModuleName.psd1"
-    $ModuleVersion  = $ModuleManifest.Version
-    $OutputFolder   = "$WorkingDir\bin\$ModuleName\$ModuleVersion"
-    mkdir $OutputFolder -Force
-    
-    Copy-Item -Path "$obj\$ModuleName.psm1" -Destination "$OutputFolder\" -Recurse
-    Copy-Item -Path $ManifestFile -Destination "$OutputFolder\" -Recurse
-}
+    #UploadTestResultsToAppVeyor -TestResults $TestResultsXml
 
-Task psscriptanalyzer {
-    Invoke-ScriptAnalyzer -Path "$WorkingDir\Source" -Recurse
-}
-
-Task clean {
-    Remove-Module $ModuleName -ErrorAction SilentlyContinue
-    
-    $binFolder = "$WorkingDir\bin"
-    if(Test-Path $binFolder -ErrorAction SilentlyContinue){
-        Remove-Item $binFolder -Recurse -Force
+    if ($TestResults.FailedCount -gt 0) {
+        Write-Error -Message 'One or more tests failed. Build cannot continue!'
     }
+}
 
-    $docsFolder = "$WorkingDir\docs"
-    if(Test-Path $docsFolder -ErrorAction SilentlyContinue){
-        Remove-Item $docsFolder -Recurse -Force
+Task 'Build' -Depends 'PSScriptAnalyzer', 'Clean' {
+    mkdir $ModuleVersionFolder -Force
+    
+    # .psm1
+    $BinModuleFile = Join-Path -Path $ModuleVersionFolder -ChildPath "$ModuleName.psm1"
+    Get-ChildItem $SourceFolder -Recurse -File | Get-Content | Out-File $BinModuleFile
+    'Export-ModuleMember -Function * -Alias * -Cmdlet *' | Out-File $BinModuleFile -Append
+    
+    # .psd1
+    Copy-Item -Path $ManifestFile -Destination $ModuleVersionFolder
+    $ModuleManifestFile = Join-Path -Path $ModuleVersionFolder -ChildPath "$ModuleName.psd1"
+    Test-ModuleManifest -Path $ModuleManifestFile
+}
+
+Task 'PSScriptAnalyzer' -Depends 'Init' {
+    RunPSScriptAnalyzer -Path $SourceFolder
+}
+
+Task 'Clean' {
+    Remove-Module -Name $ModuleName -ErrorAction SilentlyContinue
+    
+    if(Test-Path $BinFolder -ErrorAction SilentlyContinue){
+        Remove-Item $BinFolder -Recurse -Force
     }
+}
+
+Task 'Init' {
+    DisplaySystemInformation
+    InstallRequiredModules
 }
