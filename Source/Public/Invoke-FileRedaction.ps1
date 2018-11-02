@@ -21,12 +21,15 @@ function Invoke-FileRedaction {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true,
+            Position = 0,
             ValueFromPipeline = $true)]
         [ValidateScript( {Test-Path $_})]
         [string]$Path,
         [Parameter(Mandatory = $true, 
             Position = 1)]
-        [RedactionRule[]]$RedactionRule
+        [RedactionRule[]]$RedactionRule,
+        [Parameter(Position = 2)]
+        [switch]$ReadRaw
     )
 
     begin {
@@ -48,7 +51,7 @@ function Invoke-FileRedaction {
         
         Write-Progress -Activity "Redacting sensitive data from file: `"$Path`"" -Id 1
         
-        Get-Content $Path | Invoke-Redaction -RedactionRule $RedactionRule -Consistent -OutConvertionTable 'ConvertionTable' -TotalLines $TotalLines | Out-File -FilePath $SanitizedFilePath
+        Get-Content $Path -Raw:$ReadRaw | Invoke-Redaction -RedactionRule $RedactionRule -Consistent -OutConvertionTable 'ConvertionTable' -TotalLines $TotalLines | Out-File -FilePath $SanitizedFilePath
         $ConvertionTable.Keys | Select-Object -Property @{N = 'NewValue'; E = {$ConvertionTable[$_]}}, @{N = 'Original'; E = {$_}} | Sort-Object -Property NewValue | Export-Csv -Path $ConvertionTableFilePath
 
         [PSCustomObject]@{

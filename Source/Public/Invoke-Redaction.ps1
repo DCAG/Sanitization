@@ -173,10 +173,8 @@ function Invoke-Redaction {
 
     end {
         #region Write-Progress calculation block closing
-        if ($ShowProgress) {
-            $StopWatch.Stop()        
-            Write-Progress -Activity "[Done] Redacting sensitive data [Done]" -Id 2 -ParentId 1 -Completed
-        }
+        $StopWatch.Stop()        
+        Write-Progress -Activity "[Done] Redacting sensitive data [Done]" -Id 2 -ParentId 1 -Completed
         #endregion
 
         if (-not [string]::IsNullOrWhiteSpace($OutConvertionTable)) {
