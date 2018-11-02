@@ -184,7 +184,7 @@ function Invoke-Redaction {
             }
             else {
                 # CommandOrigin: Internal
-                Set-Variable -Name $OutConvertionTable -Value $ConvertionTable -Scope 1
+                Set-Variable -Name $OutConvertionTable -Value $ConvertionTable -Scope 2
             }
         }
     }
