@@ -24,13 +24,13 @@ GUID = '26716e58-1081-403e-ab49-14abfcbe03d7'
 Author = 'Amir Granot'
 
 # Company or vendor of this module
-CompanyName = 'Unknown'
+# CompanyName = ''
 
 # Copyright statement for this module
 Copyright = '(c) Amir Granot. All rights reserved.'
 
 # Description of the functionality provided by this module
-# Description = ''
+Description = 'PowerShell module to perform sanitization of sensitive on a document or a string.'
 
 # Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '5.1'
@@ -101,13 +101,13 @@ PrivateData = @{
         # LicenseUri = ''
 
         # A URL to the main website for this project.
-        # ProjectUri = ''
+        ProjectUri = 'https://github.com/DCAG/Sanitization'
 
         # A URL to an icon representing this module.
         # IconUri = ''
 
         # ReleaseNotes of this module
-        # ReleaseNotes = ''
+        ReleaseNotes = 'Initial release'
 
     } # End of PSData hashtable
 
