@@ -38,7 +38,7 @@ Redact sensitive information from a file as an array of strings or one long stri
 $WULog = "$env:USERPROFILE\Desktop\WULog.log"
 Get-WindowsUpdateLog -LogPath $WULog
 Invoke-FileRedaction -Path $WULog -ReadRaw -RedactionRule @(
-    New-RedactionRule '(?\<=\d{4}\/\d{2}\/\d{2} \d{2}\:\d{2}\:\d{2}\.\d{7} \d{1,5} \d{1,5}\s+)\w+(?=\s+)' 'Component_{0}'
+    New-RedactionRule '(?<=\d{4}\/\d{2}\/\d{2} \d{2}\:\d{2}\:\d{2}\.\d{7} \d{1,5} \d{1,5}\s+)\w+(?=\s+)' 'Component_{0}'
 )
 ```
 
