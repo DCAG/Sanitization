@@ -76,7 +76,7 @@ Properties {
     $ExternalHelpFolder = Join-Path -Path $ModuleVersionFolder -ChildPath 'en-US'
 }
 
-Task default -depends 'CreateExternalHelp'
+Task default -depends 'Publish' #'CreateExternalHelp'
 
 FormatTaskName -format @"
 -----------
