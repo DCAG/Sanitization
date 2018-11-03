@@ -126,8 +126,8 @@ Task 'Test' -Depends 'Build' {
 }
 
 Task 'Build' -Depends 'PSScriptAnalyzer', 'Clean' {
-    mkdir $ModuleVersionFolder -Force
-    
+    New-Item $ModuleVersionFolder -ItemType Directory -Force
+
     # .psm1
     $BinModuleFile = Join-Path -Path $ModuleVersionFolder -ChildPath "$ModuleName.psm1"
     Get-ChildItem $SourceFolder -Recurse -Directory | Get-ChildItem -File -Recurse | Get-Content | Out-File $BinModuleFile
