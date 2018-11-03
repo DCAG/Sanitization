@@ -109,8 +109,9 @@ Task 'CreateExternalHelp' -Depends 'Test' -Description 'Create module help from 
 
 # Default
 Task 'Test' -Depends 'Build' {
-    $ModulePaths = "$BinFolder;$env:PSModulePath" -split ';' | Select-Object -Unique
-    $env:PSModulePath = $ModulePaths -join ';'
+    $PathSeparator = [IO.Path]::PathSeparator # Usually ';'
+    $ModulePaths = "$BinFolder;$env:PSModulePath" -split $PathSeparator | Select-Object -Unique
+    $env:PSModulePath = $ModulePaths -join $PathSeparator
     Import-Module -Name $ModuleName
 
     $TestResults = Invoke-Pester -Path $TestsFolder -PassThru -OutputFile $TestResultsXml -OutputFormat NUnitXml 
