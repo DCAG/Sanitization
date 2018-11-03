@@ -127,7 +127,7 @@ Task 'Build' -Depends 'PSScriptAnalyzer', 'Clean' {
     
     # .psm1
     $BinModuleFile = Join-Path -Path $ModuleVersionFolder -ChildPath "$ModuleName.psm1"
-    Get-ChildItem $SourceFolder -Recurse -File | Get-Content | Out-File $BinModuleFile
+    Get-ChildItem $SourceFolder -Recurse -Directory | Get-ChildItem -File -Recurse | Get-Content | Out-File $BinModuleFile
     'Export-ModuleMember -Function * -Alias * -Cmdlet *' | Out-File $BinModuleFile -Append
     
     # .psd1
