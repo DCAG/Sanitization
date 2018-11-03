@@ -27,10 +27,11 @@ Redact sensitive information from an object as string by defined redaction rules
 ### EXAMPLE 1
 
 ```powershell
-Replace all a-z letters with '+' sign
 $RedactionRule = New-RedactionRule -Pattern '\[a-z\]' -NewValueString '+'
 ipconfig /all | Invoke-Redaction -RedactionRule $RedactionRule
 ```
+
+Replace all a-z letters with '+' sign.
 
 ### EXAMPLE 2
 
