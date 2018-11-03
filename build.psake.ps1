@@ -5,7 +5,7 @@ Function InstallRequiredModules {
     $ModuleToInstall = Compare-Object -ReferenceObject $RequiredModules -DifferenceObject $InstalledModule | Select-Object -ExpandProperty 'InputObject'
     if($ModuleToInstall.Count -gt 0){
         Set-PSRepository -InstallationPolicy Trusted -Name PSGallery
-        Install-Module -Name $ModuleToInstall -Repository 'PSGallery' -SkipPublisherCheck -Scope 'CurrentUser' -AllowClobber -Confirm:$false -ErrorAction 'Stop'
+        Install-Module -Name $ModuleToInstall -Repository 'PSGallery' -Force -SkipPublisherCheck -Scope 'CurrentUser' -AllowClobber -Confirm:$false -ErrorAction 'Stop'
     }
 
     Import-Module -Name $RequiredModules -Force -ErrorAction 'Stop'
