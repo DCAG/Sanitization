@@ -112,7 +112,7 @@ Task 'CreateExternalHelp' -Depends 'Test' -Description 'Create module help from 
 # Default
 Task 'Test' -Depends 'Build' {
     $PathSeparator = [IO.Path]::PathSeparator # Usually ';'
-    $ModulePaths = "$BinFolder;$env:PSModulePath" -split $PathSeparator | Select-Object -Unique
+    $ModulePaths = "$BinFolder$PathSeparator$env:PSModulePath" -split $PathSeparator | Select-Object -Unique
     $env:PSModulePath = $ModulePaths -join $PathSeparator
     Import-Module -Name $ModuleName
 
