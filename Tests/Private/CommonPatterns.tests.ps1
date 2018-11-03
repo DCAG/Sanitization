@@ -1,5 +1,5 @@
 Describe 'Common Patterns: IPV4Address' {
-    $ConvertIPValue = New-RedactionRule -CommonPattern IPV4Address
+    $ConvertIPValue = New-RedactionRule -CommonRule IPV4Address
     It 'Minimum value is ''11.0.0.1''' {
         $ConvertIPValue.Evaluate(0) | should -Match '11.0.0.1'
     }

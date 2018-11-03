@@ -2,8 +2,8 @@ using module Sanitization
 
 Describe 'New-RedactionRule' {
     Context 'Parameters Validation' {
-        It 'Pattern that doesn''t exist in validation set of CommonPattern parameter should throw' {
-            {New-RedactionRule -CommonPattern 'NoPattern'} | Should -Throw
+        It 'Pattern that doesn''t exist in validation set of CommonRule parameter should throw' {
+            {New-RedactionRule -CommonRule 'NoPattern'} | Should -Throw
         }
 
         It 'Assigning Scriptblock parameter creates redaction rule of type function' {
@@ -28,16 +28,16 @@ Describe 'New-RedactionRule' {
             'New-SanitizationRule','New-MarkingRule','Mark' | foreach-object {
                 {& $_ -Pattern 'p' -NewValueFunction {'f'}} | Should -not -Throw
                 {& $_ -Pattern 'p' -NewValueString 's'} | Should -not -Throw
-                {& $_  -CommonPattern IPV4Address} | Should -not -Throw
+                {& $_  -CommonRule IPV4Address} | Should -not -Throw
             }
         }
         It 'Should output RedactionRule type object' {
             $FunctionRule = New-RedactionRule -Pattern 'p' -NewValueFunction {'f'}
             $StringRule = New-RedactionRule -Pattern 'p' -NewValueString 's'
-            $CommonPatternRule = Mark -CommonPattern IPV4Address
+            $CommonRuleRule = Mark -CommonRule IPV4Address
             $FunctionRule.GetType() | Should -Be 'RedactionRule'
             $StringRule.GetType() | Should -Be 'RedactionRule'
-            $CommonPatternRule.GetType() | Should -Be 'RedactionRule'
+            $CommonRuleRule.GetType() | Should -Be 'RedactionRule'
         }
     }
 }

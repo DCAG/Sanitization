@@ -1,57 +1,64 @@
+<#
+.SYNOPSIS
+Redact sensitive information from an object
+
+.DESCRIPTION
+Redact sensitive information from an object as string by defined redaction rules
+
+.PARAMETER RedactionRule
+Array of redaction rules to redact by
+
+.PARAMETER InputObject
+String to redact sensitive information from
+
+.PARAMETER Consistent
+Saves discovered values in a ConvertionTable (hash table), when the same values disceverd again they are replaced with the same string that was generated the first time from the redaction rule NewValue function or NewValue formatted string.
+It uses a uniqueness value to generate new value from the redaction rule (if applicable).
+if Consistent is ommitted generation of new value from redaction rule's NewValues is based on current line number.
+
+.PARAMETER OutConvertionTable
+Creates a variable with the specified name and the ConvertionTable as its value.
+
+.PARAMETER AsObject
+Return an object with the old string, the processed string, line number and if the string was changed or not instead of just a processed string.
+
+.PARAMETER TotalLines
+Number of lines that are going to be processed over the pipeline.
+Relevant for showing informative progress bar.
+
+.EXAMPLE
+Replace all a-z letters with '+' sign
+$RedactionRule = New-RedactionRule -Pattern '[a-z]' -NewValueString '+'
+ipconfig /all | Invoke-Redaction -RedactionRule $RedactionRule
+
+.EXAMPLE
+Replace all service names that start with the letter 's' with 's_{0}', where {0} is replaced by uniqueness factor.
+Each unique serivce name will be replaced with a unique new value 's_{0}' and it will stay consistent if the service shows up multiple times.
+$RedactionRule = New-RedactionRule -Pattern '(?<=\s)[Ss].+' -NewValueString 's_{0}'
+Get-Process | Out-String | Invoke-Redaction -RedactionRule $RedactionRule -Consistent
+
+.NOTES
+
+#>
 function Invoke-Redaction {
-    <#
-    .SYNOPSIS
-    Redact a string object
-    
-    .DESCRIPTION
-    Redact a string object
-    
-    .PARAMETER InputObject
-    An Input Object to redact from
-    
-    .PARAMETER ReductionRule
-    Array of Rules with Regex pattern and new value to set when this pattern is matched to input object 
-    
-    .PARAMETER LineNumber
-    Line number is used as a seed to obfoscate new values
-    
-    .PARAMETER Consistent
-    Use a ConvertionTable to make previously matched values assigned with the same new valuethat was assigned to them and theyr were first found to make consistent
-    
-    .PARAMETER OutConvertionTable
-    Table contains the matched values and their replacements.
-    Shown only when Consistent switch is on ($true)
-    
-    .PARAMETER AsObject
-    Return object with more parameters instead of single string 
-    
-    .EXAMPLE
-    An example
-    
-    .NOTES
-    General notes
-    #>
     [Alias('Invoke-Sanitization', 'irdac', 'isntz')]
     [CmdletBinding()]
     param(
+        [Parameter(Mandatory = $true, 
+            Position = 0)]
+        [RedactionRule[]]$RedactionRule,
         # One line string
         [Parameter(Mandatory = $true,  
             ValueFromPipeline = $true,
-            Position = 0)]
+            Position = 1)]
         [AllowEmptyString()] # Incoming lines can be empty, so applied because of the Mandatory flag
         [psobject]
         $InputObject,
-        [Parameter(Mandatory = $true, 
-            Position = 1)]
-        [RedactionRule[]]$RedactionRule,
         # Requires $ConvertionTable but if it won't be provided, empty hash table for $ConvertionTable will be initialized instead
-        [Parameter(Position = 2)]
         [switch]
         $Consistent,
-        [Parameter(Position = 4)]
         [switch]
         $AsObject,
-        [Parameter(Position = 5)]
         [ValidateRange(1, [int]::MaxValue)]
         [int]
         $TotalLines = 1
@@ -67,7 +74,6 @@ function Invoke-Redaction {
             $AttributeCollection.Add($ValidateNotNullOrEmptyAttribute)
             
             $ParameterAttribute = New-Object System.Management.Automation.ParameterAttribute
-            $ParameterAttribute.Position = 3
             $AttributeCollection.Add($ParameterAttribute)
             
             $RuntimeParameter = New-Object System.Management.Automation.RuntimeDefinedParameter($ParameterName, [string], $AttributeCollection)

@@ -1,67 +1,139 @@
+<#
+.SYNOPSIS
+Redact sensitive information from a file
+
+.DESCRIPTION
+Redact sensitive information from a file as an array of strings or one long string by defined redaction rules
+
+.PARAMETER RedactionRule
+Array of rules to redact by
+
+.PARAMETER Path
+Specifies a path to one or more locations. Wildcards are permitted.
+
+.PARAMETER LiteralPath
+Specifies a path to one or more locations. Unlike the Path parameter, the value of the LiteralPath parameter is
+used exactly as it is typed. No characters are interpreted as wildcards. If the path includes escape characters,
+enclose it in single quotation marks. Single quotation marks tell Windows PowerShell not to interpret any
+characters as escape sequences.
+
+.PARAMETER ReadRaw
+Ignores newline characters and pass the entire contents of a file in one string with the newlines preserved.
+By default, newline characters in a file are used as delimiters to separate the input into an array of strings.
+Process the file as one string instead of processing the strings line by line.
+
+.EXAMPLE
+$WULog = "$env:USERPROFILE\Desktop\WULog.log"
+Get-WindowsUpdateLog -LogPath $WULog
+Invoke-FileRedaction -Path $WULog -ReadRaw -RedactionRule @(
+    New-RedactionRule '(?<=\d{4}\/\d{2}\/\d{2} \d{2}\:\d{2}\:\d{2}\.\d{7} \d{1,5} \d{1,5}\s+)\w+(?=\s+)' 'Component_{0}'
+)
+
+.NOTES
+Invoke-RedactionRule creates 2 files in the same location of the input file,
+the redacted file with "-Sanitized.txt" suffix
+and the convertion table csv file with "-ConvertionTable.csv" suffix.
+By default all strings in the files are processed with Invoke-Redaction with the -Consistent parameter.
+#>
 function Invoke-FileRedaction {
-    <#
-    .SYNOPSIS
-    Short description
-    
-    .DESCRIPTION
-    Long description
-    
-    .PARAMETER Path
-    Parameter description
-    
-    .PARAMETER RedactionRule
-    Parameter description
-    
-    .EXAMPLE
-    An example
-    
-    .NOTES
-    General notes
-    #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true,
-            Position = 0,
-            ValueFromPipeline = $true)]
-        [ValidateScript( {Test-Path $_})]
-        [string]$Path,
         [Parameter(Mandatory = $true, 
-            Position = 1)]
+            Position = 0)]
         [RedactionRule[]]$RedactionRule,
-        [Parameter(Position = 2)]
+        # Specifies a path to one or more locations. Wildcards are permitted.
+        [Parameter(Mandatory=$true,
+                   Position=1,
+                   ParameterSetName="Path",
+                   ValueFromPipeline=$true,
+                   ValueFromPipelineByPropertyName=$true,
+                   HelpMessage="Path to one or more locations.")]
+        [ValidateNotNullOrEmpty()]
+        [SupportsWildcards()]
+        [string[]]
+        $Path,
+        # Specifies a path to one or more locations. Unlike the Path parameter, the value of the LiteralPath parameter is
+        # used exactly as it is typed. No characters are interpreted as wildcards. If the path includes escape characters,
+        # enclose it in single quotation marks. Single quotation marks tell Windows PowerShell not to interpret any
+        # characters as escape sequences.
+        [Parameter(Mandatory=$true,
+                   Position=1,
+                   ParameterSetName="LiteralPath",
+                   ValueFromPipelineByPropertyName=$true,
+                   HelpMessage="Literal path to one or more locations.")]
+        [Alias("PSPath")]
+        [ValidateNotNullOrEmpty()]
+        [string[]]
+        $LiteralPath,
         [switch]$ReadRaw
     )
 
     begin {
+        $ExportCSVProperties = @{}
+        if($PSVersionTable.PSVersion.Major -le 5){
+            $ExportCSVProperties['NoTypeInformation'] = $true
+        } 
     }
 
     process {
-        
-        # Output will be on the same directory
-        $SanitizedFilePath = $Path + "-Sanitized.txt"
-        'Sanitized File: {0}' -f $SanitizedFilePath | Write-Verbose
-        $ConvertionTableFilePath = $Path + "-ConvertionTable.csv"
-        'Convertion Table File: {0}' -f $ConvertionTableFilePath | Write-Verbose 
-        
-        $TotalLines = Get-Content $Path | Measure-Object -Line | Select-Object -ExpandProperty Lines
-        'Total No.Lines: {0}' -f $TotalLines | Write-Verbose
-        if ($TotalLines -eq 0) {
-            $TotalLines = 1
+        $paths = @()
+        if ($psCmdlet.ParameterSetName -eq 'Path') {
+            foreach ($aPath in $Path) {
+                if (!(Test-Path -Path $aPath)) {
+                    $ex = New-Object System.Management.Automation.ItemNotFoundException "Cannot find path '$aPath' because it does not exist."
+                    $category = [System.Management.Automation.ErrorCategory]::ObjectNotFound
+                    $errRecord = New-Object System.Management.Automation.ErrorRecord $ex,'PathNotFound',$category,$aPath
+                    $psCmdlet.WriteError($errRecord)
+                    continue
+                }
+            
+                # Resolve any wildcards that might be in the path
+                $provider = $null
+                $paths += $psCmdlet.SessionState.Path.GetResolvedProviderPathFromPSPath($aPath, [ref]$provider)
+            }
+        }
+        else {
+            foreach ($aPath in $LiteralPath) {
+                if (!(Test-Path -LiteralPath $aPath)) {
+                    $ex = New-Object System.Management.Automation.ItemNotFoundException "Cannot find path '$aPath' because it does not exist."
+                    $category = [System.Management.Automation.ErrorCategory]::ObjectNotFound
+                    $errRecord = New-Object System.Management.Automation.ErrorRecord $ex,'PathNotFound',$category,$aPath
+                    $psCmdlet.WriteError($errRecord)
+                    continue
+                }
+            
+                # Resolve any relative paths
+                $paths += $psCmdlet.SessionState.Path.GetUnresolvedProviderPathFromPSPath($aPath)
+            }
         }
         
-        Write-Progress -Activity "Redacting sensitive data from file: `"$Path`"" -Id 1
-        
-        Get-Content $Path -Raw:$ReadRaw | Invoke-Redaction -RedactionRule $RedactionRule -Consistent -OutConvertionTable 'ConvertionTable' -TotalLines $TotalLines | Out-File -FilePath $SanitizedFilePath
-        $ConvertionTable.Keys | Select-Object -Property @{N = 'NewValue'; E = {$ConvertionTable[$_]}}, @{N = 'Original'; E = {$_}} | Sort-Object -Property NewValue | Export-Csv -Path $ConvertionTableFilePath
+        foreach ($aPath in $paths) {        
+            # Output will be on the same directory
+            $SanitizedFilePath = $aPath + "-Sanitized.txt"
+            'Sanitized File: {0}' -f $SanitizedFilePath | Write-Verbose
+            $ConvertionTableFilePath = $aPath + "-ConvertionTable.csv"
+            'Convertion Table File: {0}' -f $ConvertionTableFilePath | Write-Verbose 
+            
+            $TotalLines = Get-Content $aPath | Measure-Object -Line | Select-Object -ExpandProperty Lines
+            'Total No.Lines: {0}' -f $TotalLines | Write-Verbose
+            if ($TotalLines -eq 0) {
+                $TotalLines = 1
+            }
+            
+            Write-Progress -Activity "Redacting sensitive data from file: `"$aPath`"" -Id 1
+            
+            Get-Content $aPath -Raw:$ReadRaw | Invoke-Redaction -RedactionRule $RedactionRule -Consistent -OutConvertionTable 'ConvertionTable' -TotalLines $TotalLines | Out-File -FilePath $SanitizedFilePath
+            $ConvertionTable.Keys | Select-Object -Property @{N = 'NewValue'; E = {$ConvertionTable[$_]}}, @{N = 'Original'; E = {$_}} | Sort-Object -Property NewValue | Export-Csv -Path $ConvertionTableFilePath @ExportCSVProperties
 
-        [PSCustomObject]@{
-            Original        = $Path
-            Sanitized       = $SanitizedFilePath
-            ConvertionTable = $ConvertionTableFilePath            
+            [PSCustomObject]@{
+                Original        = $aPath
+                Sanitized       = $SanitizedFilePath
+                ConvertionTable = $ConvertionTableFilePath            
+            }       
         }
     }
     
     end {
-        Write-Progress -Activity "[Done] Redacting sensitive data from file: `"$Path`" [Done]" -Id 1 -Completed
+        Write-Progress -Activity "[Done] Redacting sensitive data from file: `"$aPath`" [Done]" -Id 1 -Completed
     }
 }

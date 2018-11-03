@@ -25,7 +25,7 @@ Describe 'Invoke-Redaction' {
     }
 
     Context 'Edge Cases' {
-        $IPV4AddressRule = New-RedactionRule -CommonPattern IPV4Address
+        $IPV4AddressRule = New-RedactionRule -CommonRule IPV4Address
         $InputStringIPAddress = '1.1.1.1 30.20.7.2 3.1.2.4 1.2.4.6 4.5.6.4 9.8.7.8'
         It 'Single rule replacements should not overlap' {
             $SanitizedOutput = $InputStringIPAddress | Invoke-Redaction -RedactionRule $IPV4AddressRule -Consistent
