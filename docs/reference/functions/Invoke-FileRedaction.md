@@ -28,7 +28,7 @@ Invoke-FileRedaction [-RedactionRule] <RedactionRule[]> [-LiteralPath] <String[]
 
 ## DESCRIPTION
 
-Redact sensitive information from a file as an array of strings or one long string by defined redaction rules
+Redact sensitive information from a file as an array of strings or one long string by defined redaction rules.
 
 ## EXAMPLES
 
@@ -46,7 +46,7 @@ Invoke-FileRedaction -Path $WULog -ReadRaw -RedactionRule @(
 
 ### -RedactionRule
 
-Array of rules to redact by
+Array of rules to redact by.
 
 ```yaml
 Type: RedactionRule[]
@@ -62,8 +62,8 @@ Accept wildcard characters: False
 
 ### -Path
 
-Specifies a path to one or more locations.
-Wildcards are permitted.
+Specifies a path to one or more locations.  
+Wildcards are permitted.  
 
 ```yaml
 Type: String[]
@@ -79,14 +79,11 @@ Accept wildcard characters: True
 
 ### -LiteralPath
 
-Specifies a path to one or more locations.
-Unlike the Path parameter, the value of the LiteralPath parameter is
-used exactly as it is typed.
-No characters are interpreted as wildcards.
-If the path includes escape characters,
-enclose it in single quotation marks.
-Single quotation marks tell Windows PowerShell not to interpret any
-characters as escape sequences.
+Specifies a path to one or more locations.  
+Unlike the Path parameter, the value of the LiteralPath parameter is used exactly as it is typed.  
+No characters are interpreted as wildcards.  
+If the path includes escape characters, enclose it in single quotation marks.  
+Single quotation marks tell Windows PowerShell not to interpret any characters as escape sequences.  
 
 ```yaml
 Type: String[]
@@ -102,8 +99,8 @@ Accept wildcard characters: False
 
 ### -ReadRaw
 
-Ignores newline characters and pass the entire contents of a file in one string with the newlines preserved.
-By default, newline characters in a file are used as delimiters to separate the input into an array of strings.
+Ignores newline characters and pass the entire contents of a file in one string with the newlines preserved.  
+By default, newline characters in a file are used as delimiters to separate the input into an array of strings.  
 Process the file as one string instead of processing the strings line by line.
 
 ```yaml
@@ -120,7 +117,7 @@ Accept wildcard characters: False
 
 ### CommonParameters
 
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable.
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable.  
 For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
@@ -129,9 +126,8 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 
 ## NOTES
 
-Invoke-RedactionRule creates 2 files in the same location of the input file,
-the redacted file with "-Sanitized.txt" suffix
-and the convertion table csv file with "-ConvertionTable.csv" suffix.
+Invoke-RedactionRule creates 2 files in the same location of the input file.  
+The redacted file with "-Sanitized.txt" suffix and the convertion table csv file with "-ConvertionTable.csv" suffix.  
 By default all strings in the files are processed with Invoke-Redaction with the -Consistent parameter.
 
 ## RELATED LINKS
