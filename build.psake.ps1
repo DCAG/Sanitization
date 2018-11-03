@@ -76,7 +76,7 @@ Properties {
     $ExternalHelpFolder = Join-Path -Path $ModuleVersionFolder -ChildPath 'en-US'
 }
 
-Task default -depends 'CreateExternalHelp'
+Task default -depends 'Publish'
 
 FormatTaskName -format @"
 -----------
@@ -96,7 +96,7 @@ Task 'CreateMarkdownHelp' -depends 'Test' {
 
 Task 'Publish' -Depends 'CreateExternalHelp' {
     'Publishing version [{0}] to PSGallery...' -f $ModuleVersion
-    Publish-Module -Name $ModuleName -NuGetApiKey $env:PSGALLERY_API_KEY -Repository 'PSGallery'
+    Publish-Module -Name $ModuleName -NuGetApiKey $env:PSGalleryAPIKey -Repository 'PSGallery'
 }
 
 Task 'CreateExternalHelp' -Depends 'Test' -Description 'Create module help from markdown files' {
