@@ -1,5 +1,5 @@
 .vscode
 bin
-docs
+build.psake.1.ps1
 Examples.ps1
 temp.psake.ps1
