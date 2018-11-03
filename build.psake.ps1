@@ -1,8 +1,8 @@
 #region Functions
 Function InstallRequiredModules {
     $RequiredModules = 'Pester', 'platyPS', 'PSScriptAnalyzer'
-    $InstalledModule = Get-InstalledModule -Name $RequiredModules -ErrorAction 'SilentlyContinue'
-    $ModuleToInstall = Compare-Object -ReferenceObject $RequiredModules -DifferenceObject $InstalledModule.Name | Select-Object -ExpandProperty Name
+    $InstalledModule = @(Get-InstalledModule -Name $RequiredModules -ErrorAction 'SilentlyContinue' | Select-Object -ExpandProperty Name)
+    $ModuleToInstall = Compare-Object -ReferenceObject $RequiredModules -DifferenceObject $InstalledModule | Select-Object -ExpandProperty Name
     if($ModuleToInstall.Count -gt 0){
         Install-Module -Name $ModuleToInstall -Repository 'PSGallery' -Scope 'CurrentUser' -AllowClobber -Confirm:$false -ErrorAction 'Stop'
     }
@@ -116,7 +116,7 @@ Task 'Test' -Depends 'Build' {
 
     $TestResults = Invoke-Pester -Path $TestsFolder -PassThru -OutputFile $TestResultsXml -OutputFormat NUnitXml 
 
-    #UploadTestResultsToAppVeyor -TestResults $TestResultsXml
+    UploadTestResultsToAppVeyor -TestResults $TestResultsXml
 
     if ($TestResults.FailedCount -gt 0) {
         Write-Error -Message 'One or more tests failed. Build cannot continue!'
