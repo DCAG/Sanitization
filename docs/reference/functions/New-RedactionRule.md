@@ -8,48 +8,57 @@ schema: 2.0.0
 # New-RedactionRule
 
 ## SYNOPSIS
+
 Creates new redaction rule.
 
 ## SYNTAX
 
 ### CustomFunction (Default)
-```
+
+```powershell
 New-RedactionRule [-Pattern] <String> [-NewValueFunction] <ScriptBlock> [<CommonParameters>]
 ```
 
 ### CustomString
-```
+
+```powershell
 New-RedactionRule [-Pattern] <String> [-NewValueString] <String> [<CommonParameters>]
 ```
 
 ### Common
-```
+
+```powershell
 New-RedactionRule [-CommonRule] <String> [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+
 Creates new redaction rule with regex pattern to look for and NewValue to replace with.
 
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+```powershell
 New-RedactionRule '(?<=\().*(?=\))' 'Process_{0}'
 ```
 
 ### EXAMPLE 2
-```
+
+```powershell
 Mark '[a-z]' { [long]$p = $args[0]; [char]($p % 26 + 65) }
 ```
 
 ### EXAMPLE 3
-```
+
+```powershell
 Mark -CommonRule IPV4Address
 ```
 
 ## PARAMETERS
 
 ### -Pattern
+
 Regex pattern
 
 ```yaml
@@ -65,6 +74,7 @@ Accept wildcard characters: False
 ```
 
 ### -NewValueFunction
+
 Script block to generate new generic data, the result is then put instead of the original value.
 This script block can accept at most 1 int parameter with $args\[0\] or declare variable in param() block
 
@@ -81,6 +91,7 @@ Accept wildcard characters: False
 ```
 
 ### -NewValueString
+
 String value to be replaced instead of pattern.
 The string can contain place holder {0}, and it will be replaced with uniqueness factor.
 
@@ -97,6 +108,7 @@ Accept wildcard characters: False
 ```
 
 ### -CommonRule
+
 Predefined rules - patterns and values
 
 ```yaml
@@ -112,6 +124,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable.
 For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
 
