@@ -40,19 +40,33 @@ Creates new redaction rule with regex pattern to look for and NewValue to replac
 ### EXAMPLE 1
 
 ```powershell
-New-RedactionRule '(?<=\().*(?=\))' 'Process_{0}'
+PS> New-RedactionRule '(?<=\().*(?=\))' 'Process_{0}'
+
+Pattern         NewValueFunction NewValueString Type
+-------         ---------------- -------------- ----
+(?<=\().*(?=\))                  Process_{0}    String
 ```
 
 ### EXAMPLE 2
 
 ```powershell
-Mark '[a-z]' { [long]$p = $args[0]; [char]($p % 26 + 65) }
+PS> Mark '[a-z]' {
+PS>   [long]$p = $args[0]; [char]($p % 26 + 65)
+PS> }
+
+Pattern NewValueFunction                            NewValueString Type
+------- ----------------                            -------------- ----
+[a-z]    [long]$p = $args[0]; [char]($p % 26 + 65)                 Function
 ```
 
 ### EXAMPLE 3
 
 ```powershell
-Mark -CommonRule IPV4Address
+PS> Mark -CommonRule IPV4Address
+
+Pattern                     NewValueFunction
+-------                     ----------------
+\b(\d{1,3}(\.\d{1,3}){3})\b ...
 ```
 
 ## PARAMETERS
