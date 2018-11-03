@@ -39,6 +39,9 @@ Function DisplaySystemInformation {
     ''
     'System Information:'
     [environment]::OSVersion | Format-List
+    ''
+    'Environment Variables:'
+    Get-ChildItem Env:\
 }
 
 Function UploadTestResultsToAppVeyor {
@@ -48,7 +51,10 @@ Function UploadTestResultsToAppVeyor {
         return
     }
 
-    Invoke-WebRequest "https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID" -InFile $TestResults
+    $WebClient = New-Object 'System.Net.WebClient'
+    $WebClient.UploadFile("https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID", $TestResults)
+
+    #Invoke-WebRequest "https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID" -InFile $TestResults
 }
 #endregion
 
