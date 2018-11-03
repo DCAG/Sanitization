@@ -70,13 +70,13 @@ Properties {
     $SourceFolder = Join-Path -Path $WorkingDir -ChildPath 'Source'
     $ManifestFile = Join-Path -Path $SourceFolder -ChildPath "$ModuleName.psd1"
     $ModuleManifest = Import-PowerShellDataFile $ManifestFile
-    $ModuleVersion = $ModuleManifest.Version
+    $ModuleVersion = $ModuleManifest.ModuleVersion
     $BinModuleFolder = Join-Path -Path $BinFolder -ChildPath $ModuleName
     $ModuleVersionFolder = Join-Path -Path $BinModuleFolder -ChildPath $ModuleVersion
     $ExternalHelpFolder = Join-Path -Path $ModuleVersionFolder -ChildPath 'en-US'
 }
 
-Task default -depends 'Publish'
+Task default -depends 'CreateExternalHelp'
 
 FormatTaskName -format @"
 -----------
@@ -96,7 +96,7 @@ Task 'CreateMarkdownHelp' -depends 'Test' {
 
 Task 'Publish' -Depends 'CreateExternalHelp' {
     'Publishing version [{0}] to PSGallery...' -f $ModuleVersion
-    Publish-Module -Name $ModuleName -NuGetApiKey $env:PSGalleryAPIKey -Repository 'PSGallery'
+    Publish-Module -Name $ModuleName -NuGetApiKey $env:PSGalleryAPIKey -Repository 'PSGallery' -Verbose
 }
 
 Task 'CreateExternalHelp' -Depends 'Test' -Description 'Create module help from markdown files' {
