@@ -4,7 +4,7 @@ Function InstallRequiredModules {
     $InstalledModule = @(Get-InstalledModule -Name $RequiredModules -ErrorAction 'SilentlyContinue' | Select-Object -ExpandProperty Name)
     $ModuleToInstall = Compare-Object -ReferenceObject $RequiredModules -DifferenceObject $InstalledModule | Select-Object -ExpandProperty 'InputObject'
     if($ModuleToInstall.Count -gt 0){
-        Install-Module -Name $ModuleToInstall -Scope 'CurrentUser' -Force -ErrorAction 'Stop'
+        Install-Module -Name $ModuleToInstall -Scope 'CurrentUser' -Force -AllowClobber -ErrorAction 'Stop'
     }
 
     Remove-Module -Name 'PowerShellGet', 'PackageManagement' -Force
