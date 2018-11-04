@@ -1,5 +1,7 @@
 #region Functions
 Function InstallRequiredModules {
+    # To avoid auto-loading and removing and again reloading the new versions of the modules 'PowerShellGet' and 'PackageManagement'
+    # Downloading the all the modules and these modules' new versions in a separate process.
     $InstallModulesScriptBlock = {
         $RequiredModules = 'Pester', 'platyPS', 'PSScriptAnalyzer','PowerShellGet','PackageManagement'
         $InstalledModule = @(Get-InstalledModule -Name $RequiredModules -ErrorAction 'SilentlyContinue' | Select-Object -ExpandProperty Name)
@@ -14,9 +16,9 @@ Function InstallRequiredModules {
     $CommandBase64 = [Convert]::ToBase64String($CommandBytes)
     Start-Process $ProcessName -ArgumentList '-NoProfile', '-EncodedCommand', $CommandBase64 -Wait -PassThru
 
-    #Remove-Module -Name 'PowerShellGet', 'PackageManagement' -Force
+    # Loading modules
     $RequiredModules = 'Pester', 'platyPS', 'PSScriptAnalyzer','PowerShellGet','PackageManagement'    
-    $ModulesToLoad = $RequiredModules | Where-Object {$_ -notin 'PackageManagement'}
+    $ModulesToLoad = $RequiredModules | Where-Object {$_ -notin 'PackageManagement'} # Load 'PowerShellGet' before 'PackageManagement'
     Import-Module -Name $ModulesToLoad -Force -ErrorAction 'Stop'
     
     # Loading the latest PowerShellGet package provider
@@ -63,7 +65,9 @@ Function UploadTestResultsToAppVeyor {
         return
     }
 
-    Invoke-WebRequest "https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID" -InFile $TestResults
+    Write-Host "APPVEYOR_JOB_ID: $env:APPVEYOR_JOB_ID"
+    
+    Invoke-WebRequest "https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID" -Method 'GET' -InFile $TestResults
     #$WebClient = New-Object 'System.Net.WebClient'
     #$WebClient.UploadFile("https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID", $TestResults)
 }
