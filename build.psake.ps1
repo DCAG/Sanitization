@@ -69,7 +69,7 @@ Function UploadTestResultsToAppVeyor {
 
     if([environment]::OSVersion.Platform -match 'Unix'){
         # If Linux
-        Invoke-Expression "curl -X POST `"$Uri`" -F `"file=@$TestResults`""
+        Invoke-Expression "curl -X POST `"$Uri`" -F `"file=@$TestResults`" -v"
     }
     else{
         # If Windows
