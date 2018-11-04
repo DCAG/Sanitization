@@ -1,14 +1,21 @@
 #region Functions
 Function InstallRequiredModules {
-    $RequiredModules = 'Pester', 'platyPS', 'PSScriptAnalyzer','PowerShellGet','PackageManagement'
-    $InstalledModule = @(Get-InstalledModule -Name $RequiredModules -ErrorAction 'SilentlyContinue' | Select-Object -ExpandProperty Name)
-    $ModuleToInstall = Compare-Object -ReferenceObject $RequiredModules -DifferenceObject $InstalledModule | Select-Object -ExpandProperty 'InputObject'
-    if($ModuleToInstall.Count -gt 0){
-        Install-Module -Name $ModuleToInstall -Scope 'CurrentUser' -Force -AllowClobber -ErrorAction 'Stop'
+    $InstallModulesScriptBlock = {
+        $RequiredModules = 'Pester', 'platyPS', 'PSScriptAnalyzer','PowerShellGet','PackageManagement'
+        $InstalledModule = @(Get-InstalledModule -Name $RequiredModules -ErrorAction 'SilentlyContinue' | Select-Object -ExpandProperty Name)
+        $ModuleToInstall = Compare-Object -ReferenceObject $RequiredModules -DifferenceObject $InstalledModule | Select-Object -ExpandProperty 'InputObject'
+        if($ModuleToInstall.Count -gt 0){
+            Install-Module -Name $ModuleToInstall -Scope 'CurrentUser' -Force -AllowClobber -ErrorAction 'Stop'
+        }
     }
-
-    Remove-Module -Name 'PowerShellGet', 'PackageManagement' -Force
     
+    $ProcessName = (Get-Process -ID $PID).ProcessName
+    $CommandBytes = [Text.Encoding]::Unicode.GetBytes($InstallModulesScriptBlock.ToString())
+    $CommandBase64 = [Convert]::ToBase64String($CommandBytes)
+    Start-Process $ProcessName -ArgumentList '-NoProfile', '-NoExit', '-EncodedCommand', $CommandBase64 -Wait -PassThru
+
+    #Remove-Module -Name 'PowerShellGet', 'PackageManagement' -Force
+    $RequiredModules = 'Pester', 'platyPS', 'PSScriptAnalyzer','PowerShellGet','PackageManagement'    
     $ModulesToLoad = $RequiredModules | Where-Object {$_ -notin 'PackageManagement'}
     Import-Module -Name $ModulesToLoad -Force -ErrorAction 'Stop'
     
