@@ -60,6 +60,8 @@ Function UploadTestResultsToAppVeyor {
 Properties {
     $ModuleName = 'Sanitization'
     $WorkingDir = $PSScriptRoot
+    
+    $TestPublish = $true
 
     $TestsFolder = Join-Path -Path $WorkingDir -ChildPath 'Tests'
     $DocsFolder = Join-Path -Path $WorkingDir -ChildPath 'docs'
@@ -96,7 +98,7 @@ Task 'CreateMarkdownHelp' -depends 'Test' {
 
 Task 'Publish' -Depends 'CreateExternalHelp' {
     'Publishing version [{0}] to PSGallery...' -f $ModuleVersion
-    Publish-Module -Name $ModuleName -NuGetApiKey $env:PSGalleryAPIKey -Repository 'PSGallery' -Verbose
+    Publish-Module -Name $ModuleName -NuGetApiKey $env:PSGalleryAPIKey -Repository 'PSGallery' -Verbose -WhatIf:$TestPublish
 }
 
 Task 'CreateExternalHelp' -Depends 'Test' -Description 'Create module help from markdown files' {
