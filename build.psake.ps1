@@ -65,9 +65,29 @@ Function UploadTestResultsToAppVeyor {
         return
     }
 
-    Write-Host "APPVEYOR_JOB_ID: $env:APPVEYOR_JOB_ID"
+    $APPVEYOR_JOB_ID = $env:APPVEYOR_JOB_ID
+    Write-Host "APPVEYOR_JOB_ID: $APPVEYOR_JOB_ID"
     
-    Invoke-WebRequest "https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID" -Method 'GET' -InFile $TestResults
+    # PowerShell Core
+    $MultipartContent = [System.Net.Http.MultipartFormDataContent]::new()
+    
+    $TestResultsFileName = Split-Path $TestResults -Leaf
+    
+    $FileStream = [System.IO.FileStream]::new($TestResults, [System.IO.FileMode]::Open)
+    $FileHeader = [System.Net.Http.Headers.ContentDispositionHeaderValue]::new("form-data")
+    $FileHeader.FileName = $TestResultsFileName
+    $FileContent = [System.Net.Http.StreamContent]::new($FileStream)
+    $FileContent.Headers.ContentDisposition = $FileHeader
+    $FileContent.Headers.ContentType = [System.Net.Http.Headers.MediaTypeHeaderValue]::Parse("text/xml")
+    $MultipartContent.Add($FileContent)
+    
+    $Uri = "https://ci.appveyor.com/api/testresults/nunit/$APPVEYOR_JOB_ID"
+    Invoke-WebRequest $Uri -Body $MultipartContent -Verbose -Method POST -ContentType 'multipart/form-data'
+    $FileStream.Close()
+
+    # If Linux
+    #Invoke-Expression "find `"$APPVEYOR_BUILD_FOLDER`" -type f -name 'TEST*.xml' -print0 | xargs -0 -I '{}' curl -F 'file=@{}' `"https://ci.appveyor.com/api/testresults/junit/$APPVEYOR_JOB_ID`""
+    # If Windows
     #$WebClient = New-Object 'System.Net.WebClient'
     #$WebClient.UploadFile("https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID", $TestResults)
 }
