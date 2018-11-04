@@ -12,6 +12,7 @@ Function InstallRequiredModules {
     }
     
     $ProcessName = (Get-Process -ID $PID).ProcessName
+    $ProcessName = if($ProcessName -ne 'pwsh'){'powershell'}
     $CommandBytes = [Text.Encoding]::Unicode.GetBytes($InstallModulesScriptBlock.ToString())
     $CommandBase64 = [Convert]::ToBase64String($CommandBytes)
     Start-Process $ProcessName -ArgumentList '-NoProfile', '-EncodedCommand', $CommandBase64 -Wait -PassThru
@@ -69,7 +70,7 @@ Function UploadTestResultsToAppVeyor {
 
     if([environment]::OSVersion.Platform -match 'Unix'){
         # If Linux
-        Invoke-Expression "curl -X POST `"$Uri`" -F `"file=@$TestResults`" -v"
+        curl -X POST "$Uri" -F "file=@$TestResults" -v
     }
     else{
         # If Windows
