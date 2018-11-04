@@ -8,7 +8,9 @@ Function InstallRequiredModules {
     }
 
     Remove-Module -Name 'PowerShellGet', 'PackageManagement' -Force
-    Import-Module -Name $RequiredModules -Force -ErrorAction 'Stop'
+    
+    $ModulesToLoad = $RequiredModules | Where-Object {$_ -ne 'PackageManagement'}
+    Import-Module -Name $ModulesToLoad -Force -ErrorAction 'Stop'
     
     # Loading the latest PowerShellGet package provider
     # Ref:  https://github.com/PowerShell/PowerShellGet/issues/246#issuecomment-375693410
