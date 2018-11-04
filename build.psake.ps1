@@ -12,7 +12,7 @@ Function InstallRequiredModules {
     $ProcessName = (Get-Process -ID $PID).ProcessName
     $CommandBytes = [Text.Encoding]::Unicode.GetBytes($InstallModulesScriptBlock.ToString())
     $CommandBase64 = [Convert]::ToBase64String($CommandBytes)
-    Start-Process $ProcessName -ArgumentList '-NoProfile', '-NoExit', '-EncodedCommand', $CommandBase64 -Wait -PassThru
+    Start-Process $ProcessName -ArgumentList '-NoProfile', '-EncodedCommand', $CommandBase64 -Wait -PassThru
 
     #Remove-Module -Name 'PowerShellGet', 'PackageManagement' -Force
     $RequiredModules = 'Pester', 'platyPS', 'PSScriptAnalyzer','PowerShellGet','PackageManagement'    
