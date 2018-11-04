@@ -12,7 +12,7 @@ Function InstallRequiredModules {
     }
     
     $ProcessName = (Get-Process -ID $PID).ProcessName
-    $ProcessName = if($ProcessName -ne 'pwsh'){'powershell'}
+    if($ProcessName -ne 'pwsh'){$ProcessName = 'powershell'}
     $CommandBytes = [Text.Encoding]::Unicode.GetBytes($InstallModulesScriptBlock.ToString())
     $CommandBase64 = [Convert]::ToBase64String($CommandBytes)
     Start-Process $ProcessName -ArgumentList '-NoProfile', '-EncodedCommand', $CommandBase64 -Wait -PassThru
