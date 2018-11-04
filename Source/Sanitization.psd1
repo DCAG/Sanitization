@@ -98,7 +98,7 @@ PrivateData = @{
         Tags = 'redact', 'redaction', 'sanitization', 'censor', 'blacking out', 'classified'
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://github.com/DCAG/Sanitization/blob/master/LICENSE.md'
 
         # A URL to the main website for this project.
         ProjectUri = 'https://github.com/DCAG/Sanitization'
@@ -114,7 +114,7 @@ PrivateData = @{
 } # End of PrivateData hashtable
 
 # HelpInfo URI of this module
-# HelpInfoURI = ''
+HelpInfoURI = 'https://github.com/DCAG/Sanitization/blob/master/ReadMe.md'
 
 # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
 # DefaultCommandPrefix = ''
