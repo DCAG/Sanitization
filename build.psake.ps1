@@ -1,13 +1,19 @@
 #region Functions
 Function InstallRequiredModules {
-    $RequiredModules = 'Pester', 'platyPS', 'PSScriptAnalyzer'
+    $RequiredModules = 'Pester', 'platyPS', 'PSScriptAnalyzer','PowerShellGet','PackageManagement'
     $InstalledModule = @(Get-InstalledModule -Name $RequiredModules -ErrorAction 'SilentlyContinue' | Select-Object -ExpandProperty Name)
     $ModuleToInstall = Compare-Object -ReferenceObject $RequiredModules -DifferenceObject $InstalledModule | Select-Object -ExpandProperty 'InputObject'
     if($ModuleToInstall.Count -gt 0){
         Install-Module -Name $ModuleToInstall -Scope 'CurrentUser' -Force -ErrorAction 'Stop'
     }
 
+    Remove-Module -Name 'PowerShellGet', 'PackageManagement' -Force
     Import-Module -Name $RequiredModules -Force -ErrorAction 'Stop'
+    
+    # Loading the latest PowerShellGet package provider
+    # Ref:  https://github.com/PowerShell/PowerShellGet/issues/246#issuecomment-375693410
+    $PSGetVersion = Get-PackageProvider 'PowerShellGet' -ListAvailable | Sort-Object 'Version' | Select-Object -Last 1 -ExpandProperty 'Version'
+    Import-PackageProvider -Name 'PowerShellGet' -RequiredVersion $PSGetVersion -Force
 }
 
 Function RunPSScriptAnalyzer {
@@ -48,8 +54,9 @@ Function UploadTestResultsToAppVeyor {
         return
     }
 
-    $WebClient = New-Object 'System.Net.WebClient'
-    $WebClient.UploadFile("https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID", $TestResults)
+    Invoke-WebRequest "https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID" -InFile $TestResults
+    #$WebClient = New-Object 'System.Net.WebClient'
+    #$WebClient.UploadFile("https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID", $TestResults)
 }
 #endregion
 
