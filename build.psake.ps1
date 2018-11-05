@@ -1,5 +1,6 @@
 #region Functions
 Function InstallRequiredModules {
+    $env:PSModulePath -split ';'
     # To avoid auto-loading and removing and again reloading the new versions of the modules 'PowerShellGet' and 'PackageManagement'
     # Downloading the all the modules and these modules' new versions in a separate process.
     $InstallModulesScriptBlock = {
@@ -68,6 +69,8 @@ Function UploadTestResultsToAppVeyor {
 
     $Uri = "https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID"
 
+    # AppVeyor require that XML files must be uploaded as 'multipart/form-data'.
+    # ref: https://www.appveyor.com/docs/running-tests/#uploading-xml-test-results
     if([environment]::OSVersion.Platform -match 'Unix'){
         # If Linux
         curl -X POST "$Uri" -F "file=@$TestResults" -v
@@ -88,7 +91,7 @@ Properties {
     $ModuleName = 'Sanitization'
     $WorkingDir = $PSScriptRoot
     
-    $TestPublish = $true
+    $TestPublish = $true # When value is $false publish to the gallery. Affects -WhatIf parameter (Publish-Module -WhatIf:$TestPublish). 
 
     $TestsFolder = Join-Path -Path $WorkingDir -ChildPath 'Tests'
     $DocsFolder = Join-Path -Path $WorkingDir -ChildPath 'docs'
@@ -125,7 +128,8 @@ Task 'CreateMarkdownHelp' -depends 'Test' {
 
 Task 'Publish' -Depends 'CreateExternalHelp' {
     'Publishing version [{0}] to PSGallery...' -f $ModuleVersion
-    Publish-Module -Name $ModuleName -NuGetApiKey $env:PSGalleryAPIKey -Repository 'PSGallery' -Verbose -WhatIf:$TestPublish
+    #Publish-Module -Name $ModuleName -NuGetApiKey $env:PSGalleryAPIKey -Repository 'PSGallery' -Verbose -WhatIf:$TestPublish
+    Publish-Module -Name $ModuleName -NuGetApiKey 'oy2pdlicnem67b6lvkdqu3dlwomxaauefdi6kditylg4om' -Repository 'PSGallery' -Verbose -WhatIf:$TestPublish
 }
 
 Task 'CreateExternalHelp' -Depends 'Test' -Description 'Create module help from markdown files' {
