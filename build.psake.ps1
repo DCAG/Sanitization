@@ -1,6 +1,5 @@
 #region Functions
 Function InstallRequiredModules {
-    $env:PSModulePath -split ';'
     # To avoid auto-loading and removing and again reloading the new versions of the modules 'PowerShellGet' and 'PackageManagement'
     # Downloading the all the modules and these modules' new versions in a separate process.
     $InstallModulesScriptBlock = {
@@ -13,7 +12,7 @@ Function InstallRequiredModules {
     }
     
     $ProcessName = (Get-Process -ID $PID).ProcessName
-    if($ProcessName -ne 'pwsh'){$ProcessName = 'powershell'}
+    if($ProcessName -ne 'pwsh'){$ProcessName = 'powershell'} # AppVeyor on some agents loads powershell from another process with a different name.
     $CommandBytes = [Text.Encoding]::Unicode.GetBytes($InstallModulesScriptBlock.ToString())
     $CommandBase64 = [Convert]::ToBase64String($CommandBytes)
     Start-Process $ProcessName -ArgumentList '-NoProfile', '-EncodedCommand', $CommandBase64 -Wait -PassThru
@@ -73,10 +72,10 @@ Function UploadTestResultsToAppVeyor {
     # ref: https://www.appveyor.com/docs/running-tests/#uploading-xml-test-results
     if([environment]::OSVersion.Platform -match 'Unix'){
         # If Linux
-        curl -X POST "$Uri" -F "file=@$TestResults" -v
+        curl -X POST "$Uri" -F "file=@$TestResults"
     }
     else{
-        # If Windows
+        # If Windows (Assuming WindowsPowerShell and Desktop CLR)
         $WebClient = New-Object 'System.Net.WebClient'
         $WebClient.UploadFile($Uri, $TestResults)
     }
@@ -108,7 +107,7 @@ Properties {
     $ExternalHelpFolder = Join-Path -Path $ModuleVersionFolder -ChildPath 'en-US'
 }
 
-Task default -depends 'Publish' #'CreateExternalHelp'
+Task default -depends 'CreateExternalHelp'
 
 FormatTaskName -format @"
 -----------
