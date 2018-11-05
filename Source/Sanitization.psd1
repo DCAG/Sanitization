@@ -95,7 +95,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = 'redact', 'redaction', 'sanitization', 'censor', 'blacking out', 'classified'
+        Tags = 'redact', 'redaction', 'sanitization', 'censor', 'classified'
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/DCAG/Sanitization/blob/master/LICENSE.md'
