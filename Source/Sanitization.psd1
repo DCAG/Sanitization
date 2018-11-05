@@ -30,7 +30,7 @@ Author = 'Amir Granot'
 Copyright = '(c) Amir Granot. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'PowerShell module to perform sanitization of sensitive on a document or a string.'
+Description = 'PowerShell module to perform sanitization of sensitive information on a document or a string.'
 
 # Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '5.1'
