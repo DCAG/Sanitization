@@ -6,8 +6,7 @@ This module helps you replace the sensitive information within a document (or a 
 which also gives you to option to keep the document consistent.  
 
 As an example it can be useful when a vendor requires log from a software that is processing classified or sensitive information.  
-Before handing over the log to the vendor, use this module to redact the sensitive information but with consistency kept in tact so the  
-vendor hopefully could still identify a pattern of a problem and help you.  
+Before handing over the log to the vendor, use this module to redact the sensitive information but with consistency kept in tact so the vendor hopefully could still identify a pattern of a problem and help you.  
 
 | Build Status |
 | --- |
