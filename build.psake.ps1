@@ -127,8 +127,7 @@ Task 'CreateMarkdownHelp' -depends 'Test' {
 
 Task 'Publish' -Depends 'CreateExternalHelp' {
     'Publishing version [{0}] to PSGallery...' -f $ModuleVersion
-    #Publish-Module -Name $ModuleName -NuGetApiKey $env:PSGalleryAPIKey -Repository 'PSGallery' -Verbose -WhatIf:$TestPublish
-    Publish-Module -Name $ModuleName -NuGetApiKey 'oy2pdlicnem67b6lvkdqu3dlwomxaauefdi6kditylg4om' -Repository 'PSGallery' -Verbose -WhatIf:$TestPublish
+    Publish-Module -Name $ModuleName -NuGetApiKey $env:PSGalleryAPIKey -Repository 'PSGallery' -Verbose -WhatIf:$TestPublish
 }
 
 Task 'CreateExternalHelp' -Depends 'Test' -Description 'Create module help from markdown files' {
