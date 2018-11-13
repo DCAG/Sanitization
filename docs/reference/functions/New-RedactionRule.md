@@ -47,27 +47,52 @@ Pattern         NewValueFunction NewValueString Type
 (?<=\().*(?=\))                  Process_{0}    String
 ```
 
+Creating redaction rule with new-value-string using positional parameters.
+
 ### EXAMPLE 2
 
 ```powershell
 PS> Mark '[a-z]' {
-PS>   [long]$p = $args[0]; [char]($p % 26 + 65)
-PS> }
+    [long]$p = $args[0]
+    [char]($p % 26 + 65)
+}
 
 Pattern NewValueFunction                            NewValueString Type
 ------- ----------------                            -------------- ----
 [a-z]    [long]$p = $args[0]; [char]($p % 26 + 65)                 Function
 ```
 
+The call to create new redaction rule is made with the alias `Mark` instead of `New-RedactionRule`.
+Creating redaction rule with new-value-function using positional parameters.  
+Scriptblock is detected automatically and assigned to `-NewValueFunction` parameter.  
+The script block accepts one number parameter/argument:
+
+- When `-Consistent` is used in Invoke-Redaction - The argument is populated with uniquness value.
+- and when `-Consistent` is **not** used in Invoke-Redaction - The argument is populated with the current line number.
+
 ### EXAMPLE 3
 
 ```powershell
-PS> Mark -CommonRule IPV4Address
+PS> $IPRule = Mark -CommonRule IPV4Address
+PS> $IPRule.Pattern
+\b(\d{1,3}(\.\d{1,3}){3})\b
+PS> $IPRule.NewValueFunction
 
-Pattern                     NewValueFunction
--------                     ----------------
-\b(\d{1,3}(\.\d{1,3}){3})\b ...
+    [int]$t = $args[0]
+
+    $o4 = ($t % 254) + 1
+    $t = $t / 254
+    $o3 = $t % 254
+    $t = $t / 254
+    $o2 = $t % 254
+    $t = $t / 254
+    $o1 = $t % 254 + 11
+
+    "$o1.$o2.$o3.$o4"
+
 ```
+
+Create a rule with predefined definition or pattern and new value (function) to obfuscate an IP address.
 
 ## PARAMETERS
 
