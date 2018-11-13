@@ -54,6 +54,8 @@ Output:
 Apple, Beet, Menta
 ```
 
+Simple replace literal value with another literal value.
+
 ### Example 2
 
 ```powershell
@@ -73,6 +75,8 @@ Banana, Sweets, Menta
 Banana, Sweets, Menta
 ```
 
+Two redaction rules, first rule is a literal value replace and second is replace with regex pattern.
+
 ### Example 3
 
 ```powershell
@@ -91,6 +95,9 @@ Output:
 Banana, Sweet_0, Menta
 Banana, Sweet_1, Menta
 ```
+
+The second redaction rule is looking to replace, based on regex pattern, the middle word in the input strings
+with a new generated value. Generated in a way that the place holder '{0}' is replaced with the line number.
 
 ### Example 4
 
@@ -114,6 +121,10 @@ Banana, Sweet_0, 82b513b7-9f82-4071-9a0d-60c439dc4d56
 Banana, Sweet_1, 244a22bc-9f84-44aa-bf12-f5522e93a130
 ```
 
+The third redaction rule is replacing the last word in each input line with a generated value.
+This generated value is result of new guid function.  
+See [New-RedactionRule](docs/reference/functions/New-RedactionRule.md#EXAMPLES) documentation for more advanced examples of function as new value generation option in a redaction rule.
+
 ### Example 5
 
 ```powershell
@@ -132,6 +143,8 @@ A_0, A_0
 A_1, A_1
 ```
 
+The redaction rule is looking to replace, based on regex pattern all the words between two commas in the input strings with a new generated value. Generated in a way that the place holder '{0}' is replaced with the **line number**.
+
 ### Example 6
 
 ```powershell
@@ -149,6 +162,21 @@ Output:
 A_1, A_0
 A_1, A_2
 ```
+
+The redaction rule is looking to replace, based on regex pattern all the words between two commas in the input strings with a new generated value.
+Because `-Consistent` switch was added the new value is generated in a way that the place holder '{0}' is replaced with a **uniquness factor** instead of line number.
+Uniqueness factor starts at 0 and increased with each unique value that is found.
+
+In this example, 3 unique values were found and replaced: 'Apple', 'Waffle' and 'Oreo'.  
+
+**The process of replacement is as follows**:  
+'Waffle' was replaced first so it got the uniqueness value of 0 (new value: 'A_0').  
+The uniqueness value was increased by 1.  
+'Apple' was replaced second so it got the uniqueness value of 1 (new value: 'A_1').  
+Again, the uniqueness value was increased by 1.  
+'Oreo' was replaced third so it got the uniqueness value of 2 (new value: 'A_2').  
+Again, the uniqueness value was increased by 1.  
+When 'Apple' was found again it was replaced with the value that was assigned to 'Apple' before, to keep on consistency.
 
 ### Example 7
 
@@ -181,13 +209,14 @@ Apple                          A_1
 Oreo                           A_2
 ```
 
-Although the arragement is different, this example is the same as the previous one with the addition of `-OutConvertionTable 'Table'`.  
+Although the arragement is different, this example is the same as the previous one ([Example 6](#Example-6)) with the addition of `-OutConvertionTable 'Table'`.  
+`-OutConvertionTable` is a Dynamic parameter that is available only when the `-Consistent` switch is true.  
 New variable `$Table` is created with the hash table used internally as its value.  
 It lets us inspect what values were replaced and which new values replced them.
 
 ### Example 8
 
-Order of rules is important.
+The order of redaction rules is important.
 
 ```powershell
 @(
@@ -215,7 +244,9 @@ Kiwi, Waffle, Menta, Kiwi
 Kiwi, Oreo, Menta, Kiwi
 ```
 
-If the order of rules is changed it has different result, as seen here:
+Transitive replacement happened (Apple->Banana->Kiwi => Apple->Kiwi).
+
+If the order of rules is switched it has different result, as seen here:
 
 ```powershell
 @(
@@ -256,6 +287,8 @@ LineNumber CurrentString                  Original                     Changed
          2 Apple - Menta - Banana         Apple - Menta - Banana         False
 ```
 
+This is the output when `-AsObject` switch is used.
+
 ### Example 10
 
 ```powershell
@@ -277,3 +310,6 @@ LineNumber CurrentString                  Original                     Changed U
          1 Food_3, Food_4, Food_2, Food_0 Apple, Oreo, Waffle, Banana     True          5
          2 Apple - Menta - Banana         Apple - Menta - Banana         False          5
 ```
+
+This is the output when `-AsObject` switch is used with `-Consistent` switch.  
+See [Example 6](#Example-6) for explanation on Uniqueness value.
