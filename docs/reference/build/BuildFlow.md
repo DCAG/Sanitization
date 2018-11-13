@@ -1,5 +1,7 @@
 # Build Flow
 
+Generated with [mermaid (https://mermaidjs.github.io/)](https://mermaidjs.github.io/).
+
 ```mermaid
 graph TD;
     D[UpdateMarkdownHelp]-->C
