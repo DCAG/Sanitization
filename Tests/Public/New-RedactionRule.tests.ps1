@@ -8,12 +8,14 @@ Describe 'New-RedactionRule' {
 
         It 'Assigning Scriptblock parameter creates redaction rule of type function' {
             $RedactionRule = New-RedactionRule 'a' {'a'}
-            $RedactionRule.Type | Should -Be 'Function'
+            $RedactionRule.GetType().FullName | Should -Be 'RedactionRuleFunction'
+            $RedactionRule.GetType().BaseType | Should -Be 'RedactionRule'
         }
 
         It 'Assigning string parameter creates redaction rule of type string' {
             $RedactionRule = New-RedactionRule 'a' 'a'
-            $RedactionRule.Type | Should -Be 'String'
+            $RedactionRule.GetType().FullName | Should -Be 'RedactionRuleString'
+            $RedactionRule.GetType().BaseType | Should -Be 'RedactionRule'
         }
 
         It 'Only 1 type of new value parameter is accepted' {
@@ -31,13 +33,14 @@ Describe 'New-RedactionRule' {
                 {& $_  -CommonRule IPV4Address} | Should -not -Throw
             }
         }
+
         It 'Should output RedactionRule type object' {
             $FunctionRule = New-RedactionRule -Pattern 'p' -NewValueFunction {'f'}
             $StringRule = New-RedactionRule -Pattern 'p' -NewValueString 's'
             $CommonRuleRule = Mark -CommonRule IPV4Address
-            $FunctionRule.GetType() | Should -Be 'RedactionRule'
-            $StringRule.GetType() | Should -Be 'RedactionRule'
-            $CommonRuleRule.GetType() | Should -Be 'RedactionRule'
+            $FunctionRule.GetType().BaseType | Should -Be 'RedactionRule'
+            $StringRule.GetType().BaseType | Should -Be 'RedactionRule'
+            $CommonRuleRule.GetType().BaseType | Should -Be 'RedactionRule'
         }
     }
 }

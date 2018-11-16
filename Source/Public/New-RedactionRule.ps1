@@ -46,7 +46,7 @@ Function New-RedactionRule {
         [Parameter(Mandatory = $true, Position = 1, ParameterSetName = 'CustomString')]
         [String]$NewValueString,
         [Parameter(Mandatory = $true, Position = 0, ParameterSetName = 'Common')]
-        [ValidateSet('IPV4Address')]   
+        [ValidateSet('IPV4Address')]
         [string]$CommonRule
     )
 
@@ -54,10 +54,10 @@ Function New-RedactionRule {
         $Script:CommonRuleTable[$CommonRule]
     }
     elseif($PSCmdlet.ParameterSetName -eq 'CustomFunction') {
-        New-Object RedactionRule($Pattern, $NewValueFunction)
+        New-Object RedactionRuleFunction($Pattern, $NewValueFunction)
     }
     elseif($PSCmdlet.ParameterSetName -eq 'CustomString') {
-        New-Object RedactionRule($Pattern, $NewValueString)
+        New-Object RedactionRuleString($Pattern, $NewValueString)
     }
 }
 
