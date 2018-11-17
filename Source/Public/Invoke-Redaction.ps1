@@ -39,6 +39,7 @@ Get-Process | Out-String | Invoke-Redaction -RedactionRule $RedactionRule -Consi
 
 .NOTES
 
+.EXTERNALHELP Sanitization-help.xml
 #>
 function Invoke-Redaction {
     [Alias('Invoke-Sanitization', 'irdac', 'isntz')]

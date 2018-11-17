@@ -12,7 +12,7 @@
 RootModule = 'Sanitization.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.0'
+ModuleVersion = '1.0.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core','Desktop')
@@ -108,9 +108,19 @@ PrivateData = @{
 
         # ReleaseNotes of this module
         ReleaseNotes = @'
+Version 1.0.1
+
+- Fixed external help redirection.
+
+Version 1.0.0
+
 - Internal classes structure was changed.
 - Added more documentation and examples.
 - Fixed consistent typo: "Convertion" was used instead of "Conversion".
+
+Version 0.0.1
+
+- Initial release
 '@
     } # End of PSData hashtable
 

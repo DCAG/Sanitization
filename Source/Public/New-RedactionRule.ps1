@@ -29,6 +29,7 @@ Mark -CommonRule IPV4Address
 
 .NOTES
 
+.EXTERNALHELP Sanitization-help.xml
 #>
 Function New-RedactionRule {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseShouldProcessForStateChangingFunctions", "")]

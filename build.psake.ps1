@@ -89,7 +89,7 @@ Function UploadTestResultsToAppVeyor {
 Properties {
     $ModuleName = 'Sanitization'
     $WorkingDir = $PSScriptRoot
-    
+
     $TestPublish = $true # When value is $false publish to the gallery. Affects -WhatIf parameter (Publish-Module -WhatIf:$TestPublish). 
 
     $TestsFolder = Join-Path -Path $WorkingDir -ChildPath 'Tests'
@@ -107,7 +107,7 @@ Properties {
     $ExternalHelpFolder = Join-Path -Path $ModuleVersionFolder -ChildPath 'en-US'
 }
 
-Task default -depends 'CreateExternalHelp'
+Task default -depends 'Publish' #'CreateExternalHelp'
 
 FormatTaskName -format @"
 -----------
@@ -127,7 +127,7 @@ Task 'CreateMarkdownHelp' -depends 'Test' {
 
 Task 'Publish' -Depends 'CreateExternalHelp' {
     'Publishing version [{0}] to PSGallery...' -f $ModuleVersion
-    Publish-Module -Name $ModuleName -NuGetApiKey $env:PSGalleryAPIKey -Repository 'PSGallery' -Verbose -WhatIf:$TestPublish
+    Publish-Module -Name $ModuleName -NuGetApiKey $env:PSGalleryAPIKey -Repository 'PSGallery' -RequiredVersion $ModuleVersion -Verbose -WhatIf:$TestPublish
 }
 
 Task 'CreateExternalHelp' -Depends 'Test' -Description 'Create module help from markdown files' {

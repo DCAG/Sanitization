@@ -34,6 +34,8 @@ Invoke-RedactionRule creates 2 files in the same location of the input file,
 the redacted file with "-Sanitized.txt" suffix
 and the conversion table csv file with "-ConversionTable.csv" suffix.
 By default all strings in the files are processed with Invoke-Redaction with the -Consistent parameter.
+
+.EXTERNALHELP Sanitization-help.xml
 #>
 function Invoke-FileRedaction {
     [CmdletBinding()]
