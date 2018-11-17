@@ -127,7 +127,7 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 ## NOTES
 
 Invoke-RedactionRule creates 2 files in the same location of the input file.  
-The redacted file with "-Sanitized.txt" suffix and the convertion table csv file with "-ConvertionTable.csv" suffix.  
+The redacted file with "-Sanitized.txt" suffix and the conversion table csv file with "-ConversionTable.csv" suffix.  
 By default all strings in the files are processed with Invoke-Redaction with the -Consistent parameter.
 
 ## RELATED LINKS

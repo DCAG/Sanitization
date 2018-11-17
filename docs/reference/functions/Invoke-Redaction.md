@@ -79,12 +79,29 @@ Accept wildcard characters: False
 
 ### -Consistent
 
-Saves discovered values in a ConvertionTable (hash table), when the same values disceverd again they are replaced with the same string that was generated the first time from the redaction rule NewValue function or NewValue formatted string.
+Saves discovered values in a ConversionTable (hash table), when the same values disceverd again they are replaced with the same string that was generated the first time from the redaction rule NewValue function or NewValue formatted string.
 It uses a uniqueness value to generate new value from the redaction rule (if applicable).
 if Consistent is ommitted generation of new value from redaction rule's NewValues is based on current line number.
 
 ```yaml
 Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -OutConversionTable
+
+Creates a variable with the specified name and the ConversionTable as its value.  
+Dynamic parameter, available only when `-Consistant` is on.
+
+```yaml
+Type: String
 Parameter Sets: (All)
 Aliases:
 

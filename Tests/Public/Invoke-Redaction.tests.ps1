@@ -1,8 +1,8 @@
 Describe 'Invoke-Redaction' {
     Context 'Parameters Validation' {
-        It 'Dynamic parameter $OutConvertionTable should be shown only when $Consistent parameter is assigned true' {
-            {'a' | Invoke-Redaction -Consistent -OutConvertionTable 't' -RedactionRule (New-RedactionRule 'a' 'b')} | Should -Not -Throw
-            {'a' | Invoke-Redaction -OutConvertionTable 't' -RedactionRule (New-RedactionRule 'a' 'b')} | Should -Throw -ExpectedMessage "A parameter cannot be found that matches parameter name 'OutConvertionTable'."
+        It 'Dynamic parameter $OutConversionTable should be shown only when $Consistent parameter is assigned true' {
+            {'a' | Invoke-Redaction -Consistent -OutConversionTable 't' -RedactionRule (New-RedactionRule 'a' 'b')} | Should -Not -Throw
+            {'a' | Invoke-Redaction -OutConversionTable 't' -RedactionRule (New-RedactionRule 'a' 'b')} | Should -Throw -ExpectedMessage "A parameter cannot be found that matches parameter name 'OutConversionTable'."
         }
     }
 
@@ -17,8 +17,8 @@ Describe 'Invoke-Redaction' {
             $SanitizedOutput = $InputStringIPAddress | Invoke-Redaction -RedactionRule $IPV4AddressRule -Consistent:$false
             $SanitizedOutput | Should -Be '0 0 0'
         }
-        It 'When consistent and $OutConvertionTable is assigned, it should be populated with hashtable of the convertion' {
-            'a' | Invoke-Redaction -Consistent -OutConvertionTable 't' -RedactionRule (New-RedactionRule 'a' 'b')
+        It 'When consistent and $OutConversionTable is assigned, it should be populated with hashtable of the conversion' {
+            'a' | Invoke-Redaction -Consistent -OutConversionTable 't' -RedactionRule (New-RedactionRule 'a' 'b')
             $t.Keys | Should -Be 'a'
             $t['a'] | Should -Be 'b'
         }

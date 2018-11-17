@@ -1,5 +1,7 @@
 # Build Flow
 
+![BuildFlowStaticImage](BuildDependenciesGraph.jpg)
+
 ```mermaid
 graph TD;
     D[UpdateMarkdownHelp]-->C

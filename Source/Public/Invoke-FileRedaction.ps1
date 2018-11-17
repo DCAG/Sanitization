@@ -32,7 +32,7 @@ Invoke-FileRedaction -Path $WULog -ReadRaw -RedactionRule @(
 .NOTES
 Invoke-RedactionRule creates 2 files in the same location of the input file,
 the redacted file with "-Sanitized.txt" suffix
-and the convertion table csv file with "-ConvertionTable.csv" suffix.
+and the conversion table csv file with "-ConversionTable.csv" suffix.
 By default all strings in the files are processed with Invoke-Redaction with the -Consistent parameter.
 #>
 function Invoke-FileRedaction {
@@ -111,8 +111,8 @@ function Invoke-FileRedaction {
             # Output will be on the same directory
             $SanitizedFilePath = $aPath + "-Sanitized.txt"
             'Sanitized File: {0}' -f $SanitizedFilePath | Write-Verbose
-            $ConvertionTableFilePath = $aPath + "-ConvertionTable.csv"
-            'Convertion Table File: {0}' -f $ConvertionTableFilePath | Write-Verbose 
+            $ConversionTableFilePath = $aPath + "-ConversionTable.csv"
+            'Conversion Table File: {0}' -f $ConversionTableFilePath | Write-Verbose 
             
             $TotalLines = Get-Content $aPath | Measure-Object -Line | Select-Object -ExpandProperty Lines
             'Total No.Lines: {0}' -f $TotalLines | Write-Verbose
@@ -122,13 +122,13 @@ function Invoke-FileRedaction {
             
             Write-Progress -Activity "Redacting sensitive data from file: `"$aPath`"" -Id 1
             
-            Get-Content $aPath -Raw:$ReadRaw | Invoke-Redaction -RedactionRule $RedactionRule -Consistent -OutConvertionTable 'ConvertionTable' -TotalLines $TotalLines | Out-File -FilePath $SanitizedFilePath
-            $ConvertionTable.Keys | Select-Object -Property @{N = 'NewValue'; E = {$ConvertionTable[$_]}}, @{N = 'Original'; E = {$_}} | Sort-Object -Property NewValue | Export-Csv -Path $ConvertionTableFilePath @ExportCSVProperties
+            Get-Content $aPath -Raw:$ReadRaw | Invoke-Redaction -RedactionRule $RedactionRule -Consistent -OutConversionTable 'ConversionTable' -TotalLines $TotalLines | Out-File -FilePath $SanitizedFilePath
+            $ConversionTable.Keys | Select-Object -Property @{N = 'NewValue'; E = {$ConversionTable[$_]}}, @{N = 'Original'; E = {$_}} | Sort-Object -Property NewValue | Export-Csv -Path $ConversionTableFilePath @ExportCSVProperties
 
             [PSCustomObject]@{
                 Original        = $aPath
                 Sanitized       = $SanitizedFilePath
-                ConvertionTable = $ConvertionTableFilePath            
+                ConversionTable = $ConversionTableFilePath            
             }       
         }
     }

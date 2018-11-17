@@ -30,15 +30,19 @@ Install-Module Sanitization -Scope UserProfile
 
 1. Go to a Computer with internet connection and save the module to the local disk
 
-```powershell
-Save-Module Sanitization -Path "$env:userprofile\Desktop"
-```
+    ```powershell
+    Save-Module Sanitization -Path "$env:userprofile\Desktop"
+    ```
 
 2. With a disk on key or any other means copy the module directory to the computer without an internet connection and paste it in the directory C:\Program Files\WindowsPowerShell\Modules\ .
 
 ---
 
 ## Examples
+
+- Jump to: [Invoke-Redaction](#Example-1) examples.
+- Jump to: [Invoke-FileRedaction](#Example-11) examples.
+- More examples in the [module help](docs/reference/functions).
 
 ### Example 1
 
@@ -190,9 +194,9 @@ $RedactionRule = @(
     New-RedactionRule -Pattern '[^\s,]+' -NewValueString 'A_{0}'
 )
 
-$Lines | Invoke-Redaction -RedactionRule $RedactionRule -Consistent -OutConvertionTable 'Table'
+$Lines | Invoke-Redaction -RedactionRule $RedactionRule -Consistent -OutConversionTable 'Table'
 
-# Print the convertion table
+# Print the conversion table
 $Table
 ```
 
@@ -209,8 +213,8 @@ Apple                          A_1
 Oreo                           A_2
 ```
 
-Although the arragement is different, this example is the same as the previous one ([Example 6](#Example-6)) with the addition of `-OutConvertionTable 'Table'`.  
-`-OutConvertionTable` is a Dynamic parameter that is available only when the `-Consistent` switch is true.  
+Although the arragement is different, this example is the same as the previous one ([Example 6](#Example-6)) with the addition of `-OutConversionTable 'Table'`.  
+`-OutConversionTable` is a Dynamic parameter that is available only when the `-Consistent` switch is true.  
 New variable `$Table` is created with the hash table used internally as its value.  
 It lets us inspect what values were replaced and which new values replced them.
 
@@ -313,3 +317,62 @@ LineNumber CurrentString                  Original                     Changed U
 
 This is the output when `-AsObject` switch is used with `-Consistent` switch.  
 See [Example 6](#Example-6) for explanation on Uniqueness value.
+
+### Example 11
+
+```powershell
+$LogFile = "WULog.log"
+Invoke-FileRedaction -Path $LogFile -RedactionRule @(
+        # Match Guid - replace with newly generated Guid
+        New-RedactionRule -Pattern '\b[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}\b' -NewValueFunction {
+                (New-Guid).Guid.ToLower()
+        }
+        New-RedactionRule -Pattern '(?<=\d{2}:\d{2}:\d{2}\.\d{7}\s+\d+\s+\d+\s+)[^\s]+?(?=\s{1,})' -NewValueString "Component_{0}"
+        New-RedactionRule -Pattern '(?<=PN=)[^\s;]+?(?=;|\s|$|\n|\r\n|\r|\n\r)' -NewValueString "Product_{0}"
+        New-RedactionRule -Pattern '(?<=(E:|\?)[^\s]*\=)[^\s&=]+?(?=&|\s|$|\n|\r\n|\r|\n\r)' -NewValueString "UriParam_{0}"
+        # Match and replace case sensitive literal 'Microsoft.com'
+        New-RedactionRule -Pattern '(?-i)Microsoft\.com' -NewValueString "Contoso.co.au"
+        New-RedactionRule -Pattern 'microsoft\.com' -NewValueString "contoso.co.au"
+        # Match and replace case sensitive literal 'Microsoft'
+        New-RedactionRule -Pattern '(?-i)Microsoft' -NewValueString "Contoso"
+        New-RedactionRule -Pattern 'microsoft' -NewValueString "contoso"
+        New-RedactionRule -Pattern 'Dell' -NewValueString "Msi"
+        New-RedactionRule -Pattern '(?<=\((cV: |cV = ))[^\s]+?(?=(\.\d+){1,}\))' -NewValueString 'cV_{0}'
+        New-RedactionRule -Pattern '(?<=Destaging package )[^\s]*?(?=\s|$|\n|\r\n|\r|\n\r)' -NewValueString 'DestagingPackage_{0}'
+        New-RedactionRule -Pattern '(?<=IntentPFaNs = )[^\s]*?(?=\s|$|\n|\r\n|\r|\n\r)' -NewValueString 'PFaNs_{0}'
+        New-RedactionRule -Pattern '(?<=Title = ).+?(?=$|\n|\r\n|\r|\n\r)' -NewValueString 'ApplicationSet_{0}'
+        New-RedactionRule -Pattern '(?<=Non-required installable package \().+(?=\) found!)' -NewValueString 'Package_{0}'
+        New-RedactionRule -Pattern 'S-1-5-21-\d{10}-\d{10}-\d{10}-\d{1,10}' -NewValueFunction {
+                $Group1 = -join (1..10 | ForEach-Object{0..9 | Get-Random})
+                $Group2 = -join (1..10 | ForEach-Object{0..9 | Get-Random})
+                $Group3 = -join (1..10 | ForEach-Object{0..9 | Get-Random})
+                'S-1-5-21-{0}-{1}-{2}-1000' -f $Group1,$Group2,$Group3
+        }
+)
+```
+
+Output:
+
+```text
+Original          Sanitized                       ConversionTable
+--------          ---------                       ---------------
+C:\Logs\WULog.log C:\Logs\WULog.log-Sanitized.txt C:\Logs\WULog.log-ConversionTable.csv
+```
+
+In this example I'm performing sanitization to Windows Update log with a large and complicated set of rules.  
+I've inspected the file, found strings and patterns I would like to redact from it and composed the redaction rules.  
+Once file has been processed, 2 new were created: sanitized text file and the conversion-table csv file.  
+The log has more than 5,000 lines, the processing took 15 seconds in PowerShell core.  
+FYI: In Windows PowerShell (5.1) it takes 1 minute and 15 seconds.  
+I've used a lot of regular expression patterns and tools:
+
+- Positive look ahead `(?=abc)`
+- Positive look behind `(?<=abc)`
+- Case insenstive `(?-i)`
+- Word Boundaries `'\bword\b'`
+
+Inspect the script and the input and output files [here](docs/examples/11).
+
+![Invoke-FileRedactionExample.gif](docs/examples/11/Invoke-FileRedactionExample.gif)
+
+![Invoke-FileRedactionReadRawExample.gif](docs/examples/11/Invoke-FileRedactionReadRawExample.gif)

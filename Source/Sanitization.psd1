@@ -107,8 +107,11 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = 'Initial release'
-
+        ReleaseNotes = @'
+- Internal classes structure was changed.
+- Added more documentation and examples.
+- Fixed consistent typo: "Convertion" was used instead of "Conversion".
+'@
     } # End of PSData hashtable
 
 } # End of PrivateData hashtable

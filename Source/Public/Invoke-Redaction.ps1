@@ -12,12 +12,12 @@ Array of redaction rules to redact by
 String to redact sensitive information from
 
 .PARAMETER Consistent
-Saves discovered values in a ConvertionTable (hash table), when the same values disceverd again they are replaced with the same string that was generated the first time from the redaction rule NewValue function or NewValue formatted string.
+Saves discovered values in a ConversionTable (hash table), when the same values disceverd again they are replaced with the same string that was generated the first time from the redaction rule NewValue function or NewValue formatted string.
 It uses a uniqueness value to generate new value from the redaction rule (if applicable).
 if Consistent is ommitted generation of new value from redaction rule's NewValues is based on current line number.
 
-.PARAMETER OutConvertionTable
-Creates a variable with the specified name and the ConvertionTable as its value.
+.PARAMETER OutConversionTable
+Creates a variable with the specified name and the ConversionTable as its value.
 
 .PARAMETER AsObject
 Return an object with the old string, the processed string, line number and if the string was changed or not instead of just a processed string.
@@ -54,7 +54,7 @@ function Invoke-Redaction {
         [AllowEmptyString()] # Incoming lines can be empty, so applied because of the Mandatory flag
         [psobject]
         $InputObject,
-        # Requires $ConvertionTable but if it won't be provided, empty hash table for $ConvertionTable will be initialized instead
+        # Requires $ConversionTable but if it won't be provided, empty hash table for $ConversionTable will be initialized instead
         [switch]
         $Consistent,
         [switch]
@@ -66,7 +66,7 @@ function Invoke-Redaction {
 
     DynamicParam {
         if ($Consistent) {
-            $ParameterName = 'OutConvertionTable'
+            $ParameterName = 'OutConversionTable'
             $RuntimeParameterDictionary = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
             $AttributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
             
@@ -85,8 +85,8 @@ function Invoke-Redaction {
 
     Begin {
         if ($Consistent) {
-            $OutConvertionTable = $PSBoundParameters[$ParameterName]            
-            $ConvertionTable = @{}
+            $OutConversionTable = $PSBoundParameters[$ParameterName]            
+            $ConversionTable = @{}
             $Uniqueness = 0
         }
 
@@ -117,16 +117,16 @@ function Invoke-Redaction {
                     'MatchedValue = {0}' -f $MatchedValue | Write-Verbose
 
                     if ($Consistent) {
-                        if ($null -eq $ConvertionTable[$MatchedValue]) {
-                            # MatchedValue doesn't exist in the ConvertionTable
-                            # Adding MatchedValue to the ConvertionTable, add it with line number (if {0} is specified in $NewValue)
-                            $ConvertionTable[$MatchedValue] = $Rule.Evaluate($Uniqueness)
-                            'Adding new value to the convertion table: $ConvetionTable[{0}] = {1}' -f $MatchedValue, $ConvertionTable[$MatchedValue] | Write-Verbose 
+                        if ($null -eq $ConversionTable[$MatchedValue]) {
+                            # MatchedValue doesn't exist in the ConversionTable
+                            # Adding MatchedValue to the ConversionTable, add it with line number (if {0} is specified in $NewValue)
+                            $ConversionTable[$MatchedValue] = $Rule.Evaluate($Uniqueness)
+                            'Adding new value to the conversion table: $ConvetionTable[{0}] = {1}' -f $MatchedValue, $ConversionTable[$MatchedValue] | Write-Verbose 
                             $Uniqueness++
                         }
 
                         # This MatchedValue exists, use it.
-                        $Replacement = $ConvertionTable[$MatchedValue]
+                        $Replacement = $ConversionTable[$MatchedValue]
                     }
                     else {
                         $Replacement = $Rule.Evaluate($LineNumber)
@@ -183,14 +183,14 @@ function Invoke-Redaction {
         Write-Progress -Activity "[Done] Redacting sensitive data [Done]" -Id 2 -ParentId 1 -Completed
         #endregion
 
-        if (-not [string]::IsNullOrWhiteSpace($OutConvertionTable)) {
+        if (-not [string]::IsNullOrWhiteSpace($OutConversionTable)) {
             '$PSCmdlet.MyInvocation.CommandOrigin: {0}' -f $PSCmdlet.MyInvocation.CommandOrigin | Write-Debug
             if ($PSCmdlet.MyInvocation.CommandOrigin -eq 'Runspace') {
-                $PSCmdlet.SessionState.PSVariable.Set($OutConvertionTable, $ConvertionTable)
+                $PSCmdlet.SessionState.PSVariable.Set($OutConversionTable, $ConversionTable)
             }
             else {
                 # CommandOrigin: Internal
-                Set-Variable -Name $OutConvertionTable -Value $ConvertionTable -Scope 2
+                Set-Variable -Name $OutConversionTable -Value $ConversionTable -Scope 2
             }
         }
     }
