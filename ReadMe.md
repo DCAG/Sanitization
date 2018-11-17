@@ -113,7 +113,7 @@ with a new generated value. Generated in a way that the place holder '{0}' is re
     New-RedactionRule -Pattern 'Apple' -NewValueString 'Banana'
     New-RedactionRule -Pattern '(?<=, )\w+(?=,)' -NewValueString 'Sweet_{0}'
     New-RedactionRule -Pattern '(?<=, )\w+$' -NewValueFunction {
-        (New-Guid).Guid
+        [Guid]::NewGuid().Guid
     }
 )
 ```
@@ -324,7 +324,7 @@ See [Example 6](#Example-6) for explanation on Uniqueness value.
 $LogFile = "WULog.log"
 Invoke-FileRedaction -Path $LogFile -RedactionRule @(
         New-RedactionRule -Pattern '\b[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}\b' -NewValueFunction {
-                (New-Guid).Guid.ToLower()
+                [Guid]::NewGuid().Guid
         }
         New-RedactionRule -Pattern '(?<=\d{2}:\d{2}:\d{2}\.\d{7}\s+\d+\s+\d+\s+)[^\s]+?(?=\s{1,})' -NewValueString "Component_{0}"
         New-RedactionRule -Pattern '(?<=PN=)[^\s;]+?(?=;|\s|$|\n)' -NewValueString "Product_{0}"
@@ -378,7 +378,7 @@ Inspect the script and the input and output files [here](docs/examples/11).
 $LogFile = "WULog.log"
 Invoke-FileRedaction -Path $LogFile -ReadRaw -RedactionRule @(
         New-RedactionRule -Pattern '\b[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}\b' -NewValueFunction {
-                (New-Guid).Guid.ToLower()
+                [Guid]::NewGuid().Guid
         }
         New-RedactionRule -Pattern '(?<=\d{2}:\d{2}:\d{2}\.\d{7}\s+\d+\s+\d+\s+)[^\s]+?(?=\s{1,})' -NewValueString "Component_{0}"
         New-RedactionRule -Pattern '(?<=PN=)[^\s;]+?(?=;|\s|$|\n)' -NewValueString "Product_{0}"

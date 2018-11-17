@@ -1,7 +1,7 @@
 $LogFile = "WULog.log"
 Invoke-FileRedaction -Path $LogFile -ReadRaw -RedactionRule @(
         New-RedactionRule -Pattern '\b[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}\b' -NewValueFunction {
-                (New-Guid).Guid.ToLower()
+                [Guid]::NewGuid().Guid
         }
         New-RedactionRule -Pattern '(?<=\d{2}:\d{2}:\d{2}\.\d{7}\s+\d+\s+\d+\s+)[^\s]+?(?=\s{1,})' -NewValueString "Component_{0}"
         New-RedactionRule -Pattern '(?<=PN=)[^\s;]+?(?=;|\s|$|\n)' -NewValueString "Product_{0}"
