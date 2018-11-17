@@ -370,5 +370,29 @@ I've used a lot of regular expression patterns and tools:
 
 Inspect the script and the input and output files [here](docs/examples/11).
 
-
 ![Invoke-FileRedaction.gif](docs/examples/11/Invoke-FileRedaction.gif)
+
+### Example 12
+
+```powershell
+$LogFile = "WULog.log"
+Invoke-FileRedaction -Path $LogFile -ReadRaw -RedactionRule @(
+        New-RedactionRule -Pattern '\b[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}\b' -NewValueFunction {
+                (New-Guid).Guid.ToLower()
+        }
+        New-RedactionRule -Pattern '(?<=\d{2}:\d{2}:\d{2}\.\d{7}\s+\d+\s+\d+\s+)[^\s]+?(?=\s{1,})' -NewValueString "Component_{0}"
+        New-RedactionRule -Pattern '(?<=PN=)[^\s;]+?(?=;|\s|$|\n)' -NewValueString "Product_{0}"
+        New-RedactionRule -Pattern '(?<=(E:|\?)[^\s]*\=)[^\s&=]+?(?=&|\s|$|\n)' -NewValueString "UriParam_{0}"
+        ...
+        ...
+)
+```
+
+Same script as previous example but with `-ReadRaw` paramter.  
+`-ReadRaw` reads the input text file as one single string instead of an array of lines.  
+Each of the redaction rules is being applied on the entire file before proceeding to the apply the next rule. This is as opposed to applying all the rules line after line.  
+In this example, processing the log took less than 5 seconds, on PowerShell Core as well as on Windows PowerShell 5.1.  
+
+Inspect the script and the input and output files [here](docs/examples/12).
+
+![Invoke-FileRedactionReadRaw.gif](docs/examples/12/Invoke-FileRedactionReadRaw.gif)
