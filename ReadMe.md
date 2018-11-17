@@ -372,7 +372,3 @@ I've used a lot of regular expression patterns and tools:
 - Word Boundaries `'\bword\b'`
 
 Inspect the script and the input and output files [here](docs/examples/11).
-
-![Invoke-FileRedactionExample.gif](docs/examples/11/Invoke-FileRedactionExample.gif)
-
-![Invoke-FileRedactionReadRawExample.gif](docs/examples/11/Invoke-FileRedactionReadRawExample.gif)
