@@ -8,9 +8,9 @@ which also gives you to option to keep the document consistent.
 As an example it can be useful when a vendor requires log from a software that is processing classified or sensitive information.  
 Before handing over the log to the vendor, use this module to redact the sensitive information but with consistency kept in tact so the vendor hopefully could still identify a pattern of a problem and help you.  
 
-| Build Status |
-| --- |
-| [![Build status](https://ci.appveyor.com/api/projects/status/2je7fnhreg7v1scx?svg=true)](https://ci.appveyor.com/project/DCAG/sanitization) |
+| Build Status | Latest Published Version |
+| --- | --- |
+| [![Build status](https://ci.appveyor.com/api/projects/status/2je7fnhreg7v1scx?svg=true)](https://ci.appveyor.com/project/DCAG/sanitization) | [![PowerShellGallery](https://img.shields.io/powershellgallery/v/Sanitization.svg?style=flat-square&label=Sanitization)](https://www.powershellgallery.com/packages/Sanitization/)
 
 ---
 
