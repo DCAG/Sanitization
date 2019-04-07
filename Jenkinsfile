@@ -1,10 +1,23 @@
 pipeline {
   agent any
   stages {
-    stage('Stage1') {
+    stage('Prepare') {
+      agent any
       steps {
-        //powershell(script: 'Write-Host "Hello"', encoding: 'utf8', label: 'Hello', returnStatus: true, returnStdout: true)
-        sh label: '', script: 'echo "hello"'
+        sh 'echo "hello"'
+        powershell(script: 'gci env:\\', returnStatus: true, returnStdout: true)
+        input(message: 'Message', submitter: 'submitter', submitterParameter: 'submitter parameter', ok: 'Ok', id: '2')
+      }
+    }
+    stage('Approval') {
+      steps {
+        input(message: 'Approve or Decline', id: '1', ok: 'Approve')
+        echo 'Message'
+      }
+    }
+    stage('Build') {
+      steps {
+        powershell(script: 'invoke-psake -build build.psake.ps1', returnStatus: true, returnStdout: true)
       }
     }
   }
