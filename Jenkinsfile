@@ -5,8 +5,7 @@ pipeline {
       agent any
       steps {
         sh 'echo "hello"'
-        powershell(script: 'gci env:\\', returnStatus: true, returnStdout: true)
-        input(message: 'Message', submitter: 'submitter', submitterParameter: 'submitter parameter', ok: 'Ok', id: '2')
+        powershell(script: 'Get-ChildItem "env:\\"', returnStatus: true, returnStdout: true)
       }
     }
     stage('Approval') {
@@ -17,7 +16,7 @@ pipeline {
     }
     stage('Build') {
       steps {
-        powershell(script: 'invoke-psake -build build.psake.ps1', returnStatus: true, returnStdout: true)
+        powershell(script: '$ENV:WORKSPACE/build.ps1', returnStatus: true, returnStdout: true)
       }
     }
   }
