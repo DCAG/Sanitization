@@ -142,21 +142,18 @@ function Invoke-Redaction {
         } # foreach($Rule in $ReductionRule)
 
         if ($AsObject) {
-            $OutputProperties = @{
+            $OutputProperties = [ordered]@{
                 LineNumber    = $LineNumber
                 CurrentString = $CurrentString
                 Original      = $InputObject
                 Changed       = $CurrentStringChanged
             }
 
-            $OutputPropertiesList = 'LineNumber', 'CurrentString', 'Original', 'Changed'
-
             if ($Consistent) {
                 $OutputProperties['Uniqueness'] = $Uniqueness
-                $OutputPropertiesList += 'Uniqueness'
             }
 
-            New-Object -TypeName PSCustomObject -Property $OutputProperties | Select-Object $OutputPropertiesList
+            New-Object -TypeName PSCustomObject -Property $OutputProperties
         }
         else {
             $CurrentString
