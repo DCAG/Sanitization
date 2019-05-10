@@ -23,7 +23,7 @@ Before handing over the log to the vendor, use this module to redact the sensiti
 ### On computer with an internet connection
 
 ```powershell
-Install-Module Sanitization -Scope UserProfile
+Install-Module Sanitization -Scope CurrentUser
 ```
 
 ### On computer without an internet connection
