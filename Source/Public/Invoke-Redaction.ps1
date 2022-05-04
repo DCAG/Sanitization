@@ -108,11 +108,11 @@ function Invoke-Redaction {
         $CurrentStringChanged = $false
 
         foreach ($Rule in $RedactionRule) {
-            $Matches = Select-String -InputObject $CurrentString -Pattern $Rule.Pattern -AllMatches | Select-Object -ExpandProperty Matches | Sort-Object -Property Index -Descending # Sort Descending is required so the replacments won't overwrite each other
-            if ($Matches) {
+            $StringMatches = Select-String -InputObject $CurrentString -Pattern $Rule.Pattern -AllMatches | Select-Object -ExpandProperty Matches | Sort-Object -Property Index -Descending # Sort Descending is required so the replacments won't overwrite each other
+            if ($StringMatches) {
                 $CurrentStringChanged = $true
                 $StrSB = New-Object System.Text.StringBuilder($CurrentString)
-                Foreach ($Match in $Matches) {
+                Foreach ($Match in $StringMatches) {
                     $MatchedValue = $Match.Value
 
                     'MatchedValue = {0}' -f $MatchedValue | Write-Verbose
