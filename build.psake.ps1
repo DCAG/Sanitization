@@ -39,7 +39,7 @@ Function RunPSScriptAnalyzer {
         'PSScriptAnalyzer passed without errors or warnings'
     }
     else{
-        $Analysis
+        $Analysis | Select-Object *
     
         if ($Errors) {
             Write-Error 'One or more Script Analyzer errors were found. Build cannot continue!'
@@ -146,7 +146,28 @@ Task 'Test' -Depends 'Build' {
     $env:PSModulePath = $ModulePaths -join $PathSeparator
     Import-Module -Name $ModuleName
 
-    $TestResults = Invoke-Pester -Path $TestsFolder -PassThru -OutputFile $TestResultsXml -OutputFormat NUnitXml 
+    $Configuration = [PesterConfiguration]@{
+        Run          = @{
+            Path     = $TestsFolder
+            PassThru = $true
+        }
+        Output       = @{
+            Verbosity = 'Detailed'
+        }
+        TestResult   = @{
+            Enabled      = $true
+            OutputFormat = "NUnitXml"
+            OutputPath   = $TestResultsXml
+        }
+        CodeCoverage = @{
+            Enabled      = $true
+            Path         = $TestsFolder
+            OutputFormat = "JaCoCo"
+            OutputPath   = "$TestResultsXml.Coverage.xml"
+        }
+    }
+
+    $TestResults = Invoke-Pester -Configuration $Configuration
 
     UploadTestResultsToAppVeyor -TestResults $TestResultsXml
 
